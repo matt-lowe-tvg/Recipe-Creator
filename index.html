@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recipe Creator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+
+
+
+
+
+
+<body class="min-h-screen text-slate-100" style="background: linear-gradient(135deg, #00462f 0%, #001536 100%); background-attachment: fixed;">
+  <!-- Top Menu Bar -->
+  <nav id="menu-bar" class="sticky top-0 z-50 bg-slate-900 border-b border-slate-700">
+    <div class="max-w-7xl mx-auto px-4 flex items-center h-10">
+      <span class="font-bold text-slate-200 mr-4">Recipe Creator</span>
+      <div class="flex items-center gap-1">
+        <!-- File Menu -->
+        <div class="menu-item relative">
+          <button class="menu-trigger px-3 py-1 text-sm text-slate-300 hover:bg-slate-700 rounded">File</button>
+          <div class="menu-dropdown absolute left-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-48 py-1">
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="new">
+              <span>New Recipe</span>
+              <span class="text-slate-500 text-xs">Ctrl+N</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="open">
+              <span>Open...</span>
+              <span class="text-slate-500 text-xs">Ctrl+O</span>
+            </button>
+            <div class="menu-submenu relative">
+              <button class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between">
+                <span>Open Recent</span>
+                <span class="text-slate-500">▸</span>
+              </button>
+              <div class="submenu-dropdown hidden absolute left-full top-0 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-48 py-1">
+                <div id="recent-files-list" class="max-h-64 overflow-y-auto">
+                  <div class="px-4 py-2 text-sm text-slate-500 italic">No recent files</div>
+                </div>
+                <div class="border-t border-slate-600 mt-1 pt-1">
+                  <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700" data-action="clear-recent">Clear Recent</button>
+                </div>
+              </div>
+            </div>
+            <div class="border-t border-slate-600 my-1"></div>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="save">
+              <span>Save</span>
+              <span class="text-slate-500 text-xs">Ctrl+S</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="save-as">
+              <span>Save As...</span>
+              <span class="text-slate-500 text-xs">Ctrl+Shift+S</span>
+            </button>
+            <div class="border-t border-slate-600 my-1"></div>
+            <div class="menu-submenu relative">
+              <button class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between">
+                <span>Export</span>
+                <span class="text-slate-500">▸</span>
+              </button>
+              <div class="submenu-dropdown hidden absolute left-full top-0 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-48 py-1">
+                <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700" data-action="export-pdf">Export as PDF</button>
+                <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700" data-action="export-jpeg">Export as JPEG</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Edit Menu -->
+        <div class="menu-item relative">
+          <button class="menu-trigger px-3 py-1 text-sm text-slate-300 hover:bg-slate-700 rounded">Edit</button>
+          <div class="menu-dropdown absolute left-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-48 py-1">
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="clear-all">
+              <span>Clear All Fields</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="reset-styles">
+              <span>Reset All Styles</span>
+            </button>
+          </div>
+        </div>
+        <!-- View Menu -->
+        <div class="menu-item relative">
+          <button class="menu-trigger px-3 py-1 text-sm text-slate-300 hover:bg-slate-700 rounded">View</button>
+          <div class="menu-dropdown absolute left-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-48 py-1">
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-action-bar">
+              <span>Show Action Bar</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+          </div>
+        </div>
+        <!-- Help Menu -->
+        <div class="menu-item relative">
+          <button class="menu-trigger px-3 py-1 text-sm text-slate-300 hover:bg-slate-700 rounded">Help</button>
+          <div class="menu-dropdown absolute left-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-48 py-1">
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700" data-action="keyboard-shortcuts">Keyboard Shortcuts</button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700" data-action="about">About Recipe Creator</button>
+          </div>
+        </div>
+      </div>
+      <div class="ml-auto">
+        <span class="text-sm text-slate-400" id="current-file-name">Untitled</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto p-4 lg:p-6">
+    <input id="open-file" type="file" accept=".recipe,application/json" hidden />
+
+
+
+
+
+
+
+
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Controls -->
+      <section class="space-y-6">
+
+        <!-- Master Paste Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Master Paste</span>
+            <span class="help-icon">?
+              <span class="tooltip">Paste recipe data from ChatGPT in the master format. Click "Copy ChatGPT Instructions" to get the prompt, then paste your recipe screenshot with it in ChatGPT. Paste the result here and click "Fill All" to populate all fields automatically.</span>
+            </span>
+          </h2>
+          <div class="space-y-3">
+            <textarea id="master-paste" rows="12" class="w-full p-3 rounded bg-slate-800 font-mono text-xs"
+              placeholder="Paste your recipe in the master format here...
+
+Example:
+::META::
+Recipe Title;Lunch/Dinner;gf,wf;4;10;20;520;38;62;14
+
+::TEXT::
+Notes
+Additional notes here
+
+::INGREDIENTS::
+Ingredient;Amount (US);Amount (Metric)
+Tofu;28 oz;794 g
+
+::DIRECTIONS::
+Step one
+Step two"></textarea>
+            <div class="flex gap-2 flex-wrap">
+              <button id="fill-all-btn" class="px-4 py-2 bg-emerald-500 text-slate-900 font-semibold rounded">Fill All</button>
+              <button id="copy-instructions-btn" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded">Copy ChatGPT Instructions</button>
+              <button id="ai-import-btn" class="px-4 py-2 bg-purple-500 text-white font-semibold rounded">AI Import from Image</button>
+              <input id="ai-import-file" type="file" accept="image/*" hidden />
+            </div>
+            <div id="master-paste-status" class="text-sm text-slate-400"></div>
+          </div>
+        </div>
+
+        <!-- Main Style Options -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Left Panel Style</span>
+            <span class="help-icon">?
+              <span class="tooltip">Customize the appearance of the left panel on page 1. Adjust colors, fonts, opacity, border, and position/scale. Changes apply in real-time to the preview.</span>
+            </span>
+          </h2>
+
+          <!-- Colors -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-200 text-sm">Colors</h3>
+              <button class="reset-btn" id="reset-colors" title="Reset colors to defaults">↻</button>
+            </div>
+            <div class="flex flex-wrap gap-4 items-center">
+              <div class="flex flex-col items-center gap-1">
+                <input id="left-bg-color" type="color" value="#0f172a" class="w-12 h-12 rounded cursor-pointer" />
+                <span class="text-xs text-slate-300">Background</span>
+              </div>
+              <div class="flex flex-col items-center gap-1">
+                <input id="left-font-color" type="color" value="#ffffff" class="w-12 h-12 rounded cursor-pointer" />
+                <span class="text-xs text-slate-300">Font Color</span>
+              </div>
+              <div class="flex flex-col items-center gap-1">
+                <input id="left-border-color" type="color" value="#000000" class="w-12 h-12 rounded cursor-pointer" />
+                <span class="text-xs text-slate-300">Border Color</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Font Sizes -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-200 text-sm">Font Sizes</h3>
+              <button class="reset-btn" id="reset-fonts" title="Reset font sizes to defaults">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Title Font Size</label>
+              <div class="flex items-center gap-3">
+                <input id="title-font" type="range" min="20" max="60" step="1" value="36"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="title-font-manual" type="number" min="20" max="60" step="1" value="36"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="title-font-value" class="text-sm min-w-[45px]">36px</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Panel Font Size</label>
+              <div class="flex items-center gap-3">
+                <input id="lp-font" type="range" min="10" max="20" step="1" value="14"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="lp-font-manual" type="number" min="10" max="20" step="1" value="14"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="lp-font-value" class="text-sm min-w-[45px]">14px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appearance -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-200 text-sm">Panel Appearance</h3>
+              <button class="reset-btn" id="reset-appearance" title="Reset appearance to defaults">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Opacity</label>
+              <div class="flex items-center gap-3">
+                <input id="opacity" type="range" min="0" max="1" step="0.05" value="1"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="opacity-manual" type="number" min="0" max="1" step="0.05" value="1"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="opacity-value" class="text-sm min-w-[45px]">100%</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Border Radius</label>
+              <div class="flex items-center gap-3">
+                <input id="border-radius" type="range" min="0" max="30" step="1" value="6"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="border-radius-manual" type="number" min="0" max="30" step="1" value="6"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="border-radius-value" class="text-sm min-w-[45px]">6px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Left Panel Position & Scale -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-200 text-sm">Left Panel - Position & Scale</h3>
+              <button class="reset-btn" id="reset-left-position" title="Reset left panel position & scale">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Scale</label>
+              <div class="flex items-center gap-3">
+                <input id="panel-scale" type="range" min="50" max="150" step="1" value="100"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="panel-scale-manual" type="number" min="50" max="150" step="1" value="100"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="panel-scale-value" class="text-sm min-w-[45px]">100%</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">X Position</label>
+              <div class="flex items-center gap-3">
+                <input id="panel-x" type="range" min="-100" max="100" step="1" value="0"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="panel-x-manual" type="number" min="-100" max="100" step="1" value="0"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="panel-x-value" class="text-sm min-w-[45px]">0px</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Y Position</label>
+              <div class="flex items-center gap-3">
+                <input id="panel-y" type="range" min="-100" max="100" step="1" value="0"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="panel-y-manual" type="number" min="-100" max="100" step="1" value="0"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="panel-y-value" class="text-sm min-w-[45px]">0px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Panel Position & Scale -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <h3 class="font-semibold text-slate-200 text-sm">Right Panel - Position & Scale</h3>
+                <span class="text-xs text-slate-400">Link</span>
+                <label class="relative inline-block w-11 h-6 cursor-pointer">
+                  <input id="link-panels" type="checkbox" checked class="sr-only peer" />
+                  <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+              <button class="reset-btn" id="reset-right-position" title="Reset right panel position & scale">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Scale</label>
+              <div class="flex items-center gap-3">
+                <input id="right-panel-scale" type="range" min="50" max="150" step="1" value="100"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="right-panel-scale-manual" type="number" min="50" max="150" step="1" value="100"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="right-panel-scale-value" class="text-sm min-w-[45px]">100%</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">X Position</label>
+              <div class="flex items-center gap-3">
+                <input id="right-panel-x" type="range" min="-100" max="100" step="1" value="0"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="right-panel-x-manual" type="number" min="-100" max="100" step="1" value="0"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="right-panel-x-value" class="text-sm min-w-[45px]">0px</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Y Position</label>
+              <div class="flex items-center gap-3">
+                <input id="right-panel-y" type="range" min="-100" max="100" step="1" value="0"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="right-panel-y-manual" type="number" min="-100" max="100" step="1" value="0"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="right-panel-y-value" class="text-sm min-w-[45px]">0px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Border -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <input id="show-border" type="checkbox" />
+                <label for="show-border" class="text-sm text-slate-300 font-semibold">Enable Border</label>
+              </div>
+              <button class="reset-btn" id="reset-border" title="Reset border settings">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Border Width</label>
+              <div class="flex items-center gap-3">
+                <input id="border-size" type="range" min="0" max="10" step="1" value="2"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="border-size-manual" type="number" min="0" max="10" step="1" value="2"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="border-size-value" class="text-sm min-w-[45px]">2px</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Style Presets Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Style Presets</span>
+            <span class="help-icon">?
+              <span class="tooltip">Save and load your favorite left panel style combinations. Click a preset to apply it, or click "New Preset" to save your current style settings for later use.</span>
+            </span>
+          </h2>
+          <div class="space-y-3">
+            <div id="presets-grid" class="grid grid-cols-2 gap-3"></div>
+          </div>
+        </div>
+
+        <!-- Recipe Title Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <div class="flex items-center gap-2">
+              <input id="show-title" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+              <span>Recipe Title</span>
+            </div>
+            <span class="help-icon">?
+              <span class="tooltip">Enter your recipe title and customize its color. Adjust left/right padding to control text positioning. Uncheck to hide the title from the recipe.</span>
+            </span>
+          </h2>
+          <div class="space-y-3">
+            <div class="flex gap-2">
+              <input id="title" class="flex-1 px-3 py-2 rounded bg-slate-800" placeholder="Recipe Title" />
+              <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer grid place-items-center">
+                <input id="title-color" type="color" value="#ffffff" class="opacity-0 absolute" />
+                <span class="text-sm">Title Color</span>
+              </label>
+            </div>
+            <div class="flex gap-4">
+              <div>
+                <label class="text-sm">Left Padding</label>
+                <input id="pad-left" type="number" value="0" class="w-24 ml-2 px-2 py-1 rounded bg-slate-800" />
+              </div>
+              <div>
+                <label class="text-sm">Right Padding</label>
+                <input id="pad-right" type="number" value="0" class="w-24 ml-2 px-2 py-1 rounded bg-slate-800" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recipe Image Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-recipe-image" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Recipe Image</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Upload a photo of your recipe to appear on the left panel. Supports common image formats (JPG, PNG). Uncheck to hide the image.</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer">
+              <input id="recipe-img" type="file" accept="image/*" hidden /> Upload Image
+            </label>
+            <button id="clear-img" class="px-3 py-2 bg-slate-800 rounded">Clear Image</button>
+            <span id="img-name" class="text-sm text-slate-400">No image</span>
+          </div>
+        </div>
+
+        <!-- Logo Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-logo" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Logo</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Add your brand logo to appear at the top of the right panel. Adjust the size slider to scale the logo. Check the box to enable/disable.</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer">
+              <input id="logo-upload" type="file" accept="image/*" hidden /> Upload Logo
+            </label>
+            <button id="clear-logo" class="px-3 py-2 bg-slate-800 rounded">Clear Logo</button>
+            <span id="logo-name" class="text-sm text-slate-400">No logo</span>
+          </div>
+          <div class="flex items-center gap-3 mt-3">
+            <label class="text-sm flex-shrink-0">Logo Size:</label>
+            <input id="logo-size" type="range" min="50" max="400" value="200" class="flex-1" />
+            <span id="logo-size-value" class="text-sm w-12">200px</span>
+            <button id="reset-logo-size" class="reset-btn" title="Reset logo size to default">↻</button>
+          </div>
+        </div><!-- Meal Type and Dietary Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Meal Type & Dietary</span>
+            <span class="help-icon">?
+              <span class="tooltip">Select the meal category and dietary tags (GF=Gluten Free, SF=Soy Free, NF=Nut Free, WF=Wheat Free). These appear as pills on the left panel. Adjust vertical position to control placement.</span>
+            </span>
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <input id="show-meal-type" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+                <h3 class="font-semibold text-slate-200">Meal Type</h3>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Breakfast" /> Breakfast
+                </label>
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Lunch/Dinner" /> Lunch/Dinner
+                </label>
+
+                                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Smoothie" /> Smoothie
+                </label>
+
+
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Snack" /> Snack
+                </label>
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Dessert" /> Dessert
+                </label>
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Sauce" /> Sauce
+                </label>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <input id="show-dietary" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+                <h3 class="font-semibold text-slate-200">Dietary</h3>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <label class="flex items-center gap-2"><input id="gf" type="checkbox" /> GF</label>
+                <label class="flex items-center gap-2"><input id="sf" type="checkbox" /> SF</label>
+                <label class="flex items-center gap-2"><input id="nf" type="checkbox" /> NF</label>
+                <label class="flex items-center gap-2"><input id="wf" type="checkbox" /> WF</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dietary pills vertical position -->
+          <div class="space-y-2 mt-4 pt-3 border-t border-slate-700">
+            <h3 class="font-semibold text-slate-200">Dietary Position</h3>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-slate-300">Vertical Position:</span>
+              <input id="dietary-position" type="range" min="0" max="100" step="1" value="90"
+                class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+              <input id="dietary-position-manual" type="number" min="0" max="100" step="5" value="90"
+                class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+              <span id="dietary-position-value" class="text-sm">90%</span>
+            </div>
+          </div>
+
+
+
+          <!-- Meal type pill vertical position -->
+          <div class="space-y-2 mt-4 pt-3 border-t border-slate-700">
+            <h3 class="font-semibold text-slate-200">Meal Type Position</h3>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-slate-300">Vertical Position:</span>
+              <input id="mealtype-position" type="range" min="0" max="100" step="1" value="95"
+                class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+              <input id="mealtype-position-manual" type="number" min="0" max="100" step="5" value="95"
+                class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+              <span id="mealtype-position-value" class="text-sm">95%</span>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
+
+
+
+
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Recipe Information & Macros</span>
+            <span class="help-icon">?
+              <span class="tooltip">Enter serving size, prep/cook times, and nutritional macros. Toggle vertical layout to stack items. Adjust section spacing to control gap between info and macros. Fields with "0" or empty values will be hidden.</span>
+            </span>
+          </h2>
+
+          <div class="flex items-center gap-2 mb-3">
+            <label class="text-sm">Section Spacing:</label>
+            <input id="info-macro-gap" type="range" value="40" min="0" max="500"
+              class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+            <input id="info-macro-gap-manual" type="number" value="40" min="0" max="500"
+              class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+            <span id="info-macro-gap-value" class="text-sm">40 px</span>
+          </div>
+
+          <div id="info-macro-wrap" class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-800 rounded p-3 space-y-2">
+              <div class="flex items-center gap-2">
+                <input id="show-info-section" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+                <h3 class="font-semibold">Recipe Information</h3>
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <input id="info-layout-vertical" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+                <label class="text-sm">Vertical Layout</label>
+              </div>
+              <div class="grid grid-cols-3 items-center gap-2">
+                <label class="text-sm">Serves</label>
+                <input id="serves" class="col-span-2 px-2 py-1 rounded bg-slate-900" />
+                <label class="text-sm">Prep Time</label>
+                <div class="col-span-2 flex items-center gap-2">
+                  <input id="prep" class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">mins</span>
+                </div>
+                <label class="text-sm">Cook Time</label>
+                <div class="col-span-2 flex items-center gap-2">
+                  <input id="cook" class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">mins</span>
+                </div>
+              </div>
+            </div>
+            <div class="bg-slate-800 rounded p-3 space-y-2">
+              <div class="flex items-center gap-2">
+                <input id="show-macros" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+                <h3 class="font-semibold">Macros</h3>
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <input id="macros-layout-vertical" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+                <label class="text-sm">Vertical Layout</label>
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <input id="show-macros-title" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+                <label class="text-sm">Show Macros Title</label>
+                <input id="macros-title-text" class="flex-1 px-2 py-1 rounded bg-slate-900 text-sm" placeholder="Individual Serving" value="Individual Serving" />
+              </div>
+              <div class="grid grid-cols-3 items-center gap-2">
+                <label class="text-sm">Calories</label>
+                <input id="cal" class="col-span-2 px-2 py-1 rounded bg-slate-900" />
+                <label class="text-sm">Protein</label>
+                <div class="col-span-2 flex items-center gap-2"><input id="pro"
+                    class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">g</span></div>
+                <label class="text-sm">Carbs</label>
+                <div class="col-span-2 flex items-center gap-2"><input id="carb"
+                    class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">g</span></div>
+                <label class="text-sm">Fat</label>
+                <div class="col-span-2 flex items-center gap-2"><input id="fat"
+                    class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">g</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Additional Text Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-text-sections" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Additional Text</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Add custom text sections like notes, tips, or storage instructions. Each section can have an optional title. Text appears on the left panel below the recipe title.</span>
+            </span>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <button id="add-text" class="px-3 py-1 bg-emerald-400 text-slate-900 rounded">Add Text Section</button>
+            </div>
+            <div id="text-sections" class="space-y-3"></div>
+          </div>
+        </div>
+
+        <!-- Ingredient Tables Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-ingredients" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Ingredient Tables</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Create ingredient tables with customizable rows and columns. Add multiple tables for complex recipes (e.g., "Bowl" and "Sauce"). Paste semicolon-separated data to quickly fill tables. Toggle table titles and borders as needed.</span>
+            </span>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-3 flex-wrap">
+                <button id="add-table" class="px-3 py-1 bg-emerald-400 text-slate-900 rounded">Add Table</button>
+                <label class="flex items-center gap-2">
+                  <input id="show-table-titles" type="checkbox" /> Show Table Titles
+                </label>
+                <label class="flex items-center gap-2">
+                  <input id="show-table-borders" type="checkbox" checked /> Show Table Borders
+                </label>
+              </div>
+              <button id="copy-ingredients-prompt-btn" class="px-3 py-1 bg-blue-500 text-white rounded text-sm">Copy ChatGPT Prompt</button>
+            </div>
+            <div id="ingredients-prompt-status" class="text-sm text-slate-400"></div>
+            <div id="tables" class="space-y-4"></div>
+          </div>
+        </div>
+
+        <!-- Directions Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-directions" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Directions</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Add cooking steps one by one or paste multiple steps separated by semicolons. Check "Show all directions on Page 2" to move all steps to page 2 (useful for long recipes). Steps are automatically numbered.</span>
+            </span>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <button id="add-step" class="px-3 py-1 bg-emerald-400 text-slate-900 rounded">Add Step</button>
+            </div>
+            <label class="flex items-center gap-2">
+              <input id="all-directions-page2" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+              <span class="text-sm">Show all directions on Page 2</span>
+            </label>
+            <div class="flex gap-2">
+              <textarea id="paste-steps" rows="3" class="w-full p-2 rounded bg-slate-800"
+                placeholder="Paste steps separated by semicolons"></textarea>
+              <button id="fill-steps" class="px-3 py-1 bg-slate-800 rounded">Fill Steps</button>
+            </div>
+            <div id="steps" class="space-y-2"></div>
+          </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- Directions Positioning -->
+<div class="section-container">
+  <h2 class="section-header">
+    <span>Directions Positioning</span>
+    <span class="help-icon">?
+      <span class="tooltip">Fine-tune the vertical position of directions on the page. Enable manual positioning if your ingredient tables export shorter than they appear in preview, then adjust the offset to fill the gap.</span>
+    </span>
+  </h2>
+  <div class="space-y-3">
+    <label class="flex items-center gap-2">
+      <input id="steps-manual-enabled" type="checkbox" />
+      Enable manual positioning
+    </label>
+
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-slate-300">Offset Y:</span>
+      <input id="steps-offset" type="range" min="-200" max="600" step="1" value="0"
+             class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+      <input id="steps-offset-manual" type="number" min="-200" max="600" step="1" value="0"
+             class="w-24 px-2 py-1 rounded bg-slate-800 text-sm" />
+      <span id="steps-offset-value" class="text-sm">0 px</span>
+    </div>
+
+    <p class="text-xs text-slate-400">
+      Turn this on if your tables export shorter than they look in the preview. Move the Directions up to fill the gap.
+    </p>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- Templates Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Templates</span>
+            <span class="help-icon">?
+              <span class="tooltip">Upload background images for page 1 and optionally page 2. Templates appear behind all content. Supports JPG and PNG. Leave page 2 template empty if you only need one page.</span>
+            </span>
+          </h2>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer">
+                <input id="tpl1" type="file" accept="image/*" hidden /> Load Page 1 Template
+              </label>
+              <span id="tpl1-name" class="text-sm text-slate-400">No template</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer">
+                <input id="tpl2" type="file" accept="image/*" hidden /> Load Page 2 Template
+              </label>
+              <span id="tpl2-name" class="text-sm text-slate-400">Optional</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview Section -->
+      <section id="preview-section" class="section-container sticky top-4 self-start">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="section-header mb-0 pb-0 border-b-0">Preview</h2>
+          <div class="text-xs text-slate-400">Letter 8.5 x 11</div>
+        </div>
+        <div id="preview" class="w-fit mx-auto">
+          <!-- PAGE 1 -->
+          <div id="page1" class="page">
+            <div id="tpl1-bg" class="template-bg"></div>
+            <div class="content grid grid-cols-12 gap-4 h-full">
+              <!-- Left panel -->
+              <div class="col-span-5 left-panel relative rounded-md overflow-hidden p-4">
+                <!-- Top content -->
+                <div>
+                  <div class="grid gap-3">
+                    <img id="recipe-img-el" class="w-full h-48 object-cover bg-white rounded" alt="" />
+                    <div>
+                      <h1 id="title-el" class="title text-3xl mb-2" style="color:#ffffff;">Recipe Title</h1>
+                      <div id="extra-text" class="space-y-2 text-sm"></div>
+                    </div>
+                  </div>
+                  <div id="info-section-container" class="mt-6 uppercase grid grid-cols-3 gap-4 text-sm text-left">
+                    <div>
+                      <div class="font-bold">SERVES</div>
+                      <div id="serves-el"></div>
+                    </div>
+                    <div>
+                      <div class="font-bold">PREP TIME</div>
+                      <div><span id="prep-el"></span> MINS</div>
+                    </div>
+                    <div>
+                      <div class="font-bold">COOK TIME</div>
+                      <div><span id="cook-el"></span> MINS</div>
+                    </div>
+                  </div>
+                  <div id="macros-title" class="font-bold text-sm mb-2" style="display: none;">Individual Serving</div>
+                  <div id="macros-grid" class="grid grid-cols-2 gap-y-2 gap-x-8 text-sm">
+                    <div>
+                      <div class="font-bold">CALORIES</div>
+                      <div id="cal-el" class="text-left"></div>
+                    </div>
+                    <div>
+                      <div class="font-bold">PROTEIN</div>
+                      <div id="pro-el" class="text-left"></div>
+                    </div>
+                    <div>
+                      <div class="font-bold">CARBS</div>
+                      <div id="carb-el" class="text-left"></div>
+                    </div>
+                    <div>
+                      <div class="font-bold">FAT</div>
+                      <div id="fat-el" class="text-left"></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Bottom content -->
+                <div class="mt-auto mb-16">
+                  <!-- Dietary pills -->
+                  <div class="flex justify-center gap-3" id="diet-pills"></div>
+                  <!-- Meal type pill -->
+                  <div class="flex justify-center gap-3 mt-3" id="meal-pill"></div>
+                </div>
+                <div class="footer-bar text-sm"></div>
+              </div>
+
+              <!-- Right column -->
+              <div class="col-span-7">
+                <div id="logo-container" class="mb-4 text-center" style="display: none;">
+                  <img id="logo-img" src="" alt="Logo" style="max-width: 200px; margin: 0 auto;" />
+                </div>
+                <div id="tables-preview" class="space-y-4"></div>
+<div id="directions-block" class="mt-4">
+  <div class="font-extrabold text-xl mb-2">Directions</div>
+  <ol id="steps-preview" class="list-decimal pl-4 space-y-2 text-sm"></ol>
+</div>
+
+
+       
+               
+              </div>
+            </div>
+          </div>
+          <!-- Sticky Button Bar -->
+          <div id="action-bar"
+            class="sticky bottom-4 mt-4 rounded-lg p-3 border shadow-lg" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-color: rgba(255, 255, 255, 0.1);">
+            <div class="flex gap-2 justify-center">
+
+              <button id="btn-open" class="px-3 py-2 bg-slate-700 text-white rounded">Open .recipe</button>
+              <button id="btn-save" class="px-3 py-2 bg-slate-700 text-white rounded">Save .recipe</button>
+
+              <button id="btn-export-pdf" class="px-3 py-2 bg-slate-700 text-white rounded font-semibold">Export PDF</button>
+
+
+
+              <button id="btn-export-jpeg" class="px-3 py-2 bg-slate-700 text-white rounded font-semibold">Export
+                JPEG</button>
+            </div>
+          </div>
+          <!-- PAGE 2 -->
+          <div id="page2" class="page mt-8 hidden">
+            <div id="tpl2-bg" class="template-bg"></div>
+            <div class="content">
+              <h1 id="page2-title" class="text-3xl font-bold text-center mb-4" style="display: none;"></h1>
+              <h2 class="text-xl font-bold">Directions Continued</h2>
+              <ol id="steps-preview-cont" class="list-decimal pl-4 space-y-2 text-sm mt-2"></ol>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+
+
+
+
+
+
+
+</body>
+
+</html>

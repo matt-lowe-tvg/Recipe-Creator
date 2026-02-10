@@ -71,6 +71,8 @@
                 <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700" data-action="export-jpeg">Export as JPEG</button>
               </div>
             </div>
+            <div class="border-t border-slate-600 my-1"></div>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700" data-action="preferences">Preferences...</button>
           </div>
         </div>
         <!-- Edit Menu -->
@@ -945,6 +947,28 @@ Step two"></textarea>
 
 
 
+
+  <!-- Preferences Modal -->
+  <div id="preferences-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-slate-200">Preferences</h2>
+        <button id="close-preferences" class="text-slate-400 hover:text-slate-200 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="space-y-4">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input id="pref-default-logo" type="checkbox" checked class="mt-1 w-4 h-4 rounded cursor-pointer" />
+          <div>
+            <span class="text-slate-200 font-medium">Use default logo</span>
+            <p class="text-sm text-slate-400 mt-1">When enabled, new recipes will automatically use The Vegan Gym logo. Disable to use your own logo.</p>
+          </div>
+        </label>
+      </div>
+      <div class="mt-6 flex justify-end">
+        <button id="save-preferences" class="px-4 py-2 bg-emerald-500 text-slate-900 font-semibold rounded">Save</button>
+      </div>
+    </div>
+  </div>
 
   <script src="config.js"></script>
   <script src="script.js"></script>

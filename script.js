@@ -2727,9 +2727,19 @@ function newRecipe() {
     el('wf').checked = false;
 
     el('img-name').textContent = 'No image';
-    el('logo-name').textContent = 'No logo';
     el('tpl1-name').textContent = 'No template';
     el('tpl2-name').textContent = 'Optional';
+
+    // Apply default logo if preference is enabled
+    const prefs = getPreferences();
+    if (prefs.useDefaultLogo) {
+      state.logoURL = DEFAULT_LOGO_URL;
+      state.showLogo = true;
+      el('show-logo').checked = true;
+      el('logo-name').textContent = 'Default logo';
+    } else {
+      el('logo-name').textContent = 'No logo';
+    }
 
     renderTextSections();
     renderTables();
@@ -2885,6 +2895,83 @@ function toggleDevFeatures() {
   }
 })();
 
+// ====================
+// Preferences
+// ====================
+const DEFAULT_LOGO_URL = 'https://images.squarespace-cdn.com/content/579650b6ff7c50a2d8f5518f/efd2a126-acfd-4898-90a2-2da968c9defb/TVG+B%2BW.png';
+
+function getPreferences() {
+  try {
+    const saved = localStorage.getItem('recipe_preferences');
+    return saved ? JSON.parse(saved) : { useDefaultLogo: true };
+  } catch {
+    return { useDefaultLogo: true };
+  }
+}
+
+function savePreferences(prefs) {
+  localStorage.setItem('recipe_preferences', JSON.stringify(prefs));
+}
+
+function openPreferences() {
+  const modal = document.getElementById('preferences-modal');
+  const checkbox = document.getElementById('pref-default-logo');
+  const prefs = getPreferences();
+
+  if (checkbox) checkbox.checked = prefs.useDefaultLogo !== false;
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closePreferences() {
+  const modal = document.getElementById('preferences-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+// Preferences modal event handlers
+document.getElementById('close-preferences')?.addEventListener('click', closePreferences);
+document.getElementById('preferences-modal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'preferences-modal') closePreferences();
+});
+
+document.getElementById('save-preferences')?.addEventListener('click', () => {
+  const checkbox = document.getElementById('pref-default-logo');
+  const prefs = { useDefaultLogo: checkbox?.checked ?? true };
+  savePreferences(prefs);
+  closePreferences();
+
+  // If default logo is enabled and no custom logo is set, apply the default logo
+  if (prefs.useDefaultLogo && !state.logoURL) {
+    applyDefaultLogo();
+  }
+});
+
+function applyDefaultLogo() {
+  const prefs = getPreferences();
+  if (prefs.useDefaultLogo) {
+    state.logoURL = DEFAULT_LOGO_URL;
+    state.showLogo = true;
+    el('show-logo').checked = true;
+    el('logo-name').textContent = 'Default logo';
+    refreshPreview();
+  }
+}
+
+// Apply default logo on initial load if preference is enabled
+(function initDefaultLogo() {
+  const prefs = getPreferences();
+  if (prefs.useDefaultLogo) {
+    state.logoURL = DEFAULT_LOGO_URL;
+    state.showLogo = true;
+    // Update checkbox after DOM is ready
+    setTimeout(() => {
+      const showLogoCheckbox = el('show-logo');
+      if (showLogoCheckbox) showLogoCheckbox.checked = true;
+      el('logo-name').textContent = 'Default logo';
+      refreshPreview();
+    }, 0);
+  }
+})();
+
 // Menu action handlers
 document.querySelectorAll('.menu-action').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -2927,6 +3014,9 @@ document.querySelectorAll('.menu-action').forEach(btn => {
         break;
       case 'toggle-dev-features':
         toggleDevFeatures();
+        break;
+      case 'preferences':
+        openPreferences();
         break;
     }
 

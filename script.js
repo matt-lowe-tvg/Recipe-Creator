@@ -2844,6 +2844,47 @@ function toggleActionBar() {
   }
 })();
 
+// Toggle developmental features visibility
+function toggleDevFeatures() {
+  const menuItem = document.querySelector('[data-action="toggle-dev-features"]');
+  const checkmark = menuItem?.querySelector('.checkmark');
+  const devFeatures = document.querySelectorAll('.dev-feature');
+
+  const isCurrentlyEnabled = checkmark?.style.display !== 'none';
+
+  if (isCurrentlyEnabled) {
+    // Turning off
+    devFeatures.forEach(el => el.style.display = 'none');
+    if (checkmark) checkmark.style.display = 'none';
+    localStorage.setItem('devFeaturesEnabled', 'false');
+  } else {
+    // Turning on - show warning first
+    const confirmed = confirm(
+      'Warning: Developmental features are experimental and may not be fully functional.\n\n' +
+      'These features are still in development and may have bugs or incomplete functionality.\n\n' +
+      'Do you want to enable them anyway?'
+    );
+
+    if (confirmed) {
+      devFeatures.forEach(el => el.style.display = '');
+      if (checkmark) checkmark.style.display = '';
+      localStorage.setItem('devFeaturesEnabled', 'true');
+    }
+  }
+}
+
+// Restore dev features state on load (but don't show by default)
+(function restoreDevFeaturesState() {
+  const saved = localStorage.getItem('devFeaturesEnabled');
+  if (saved === 'true') {
+    const devFeatures = document.querySelectorAll('.dev-feature');
+    const menuItem = document.querySelector('[data-action="toggle-dev-features"]');
+    const checkmark = menuItem?.querySelector('.checkmark');
+    devFeatures.forEach(el => el.style.display = '');
+    if (checkmark) checkmark.style.display = '';
+  }
+})();
+
 // Menu action handlers
 document.querySelectorAll('.menu-action').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -2883,6 +2924,9 @@ document.querySelectorAll('.menu-action').forEach(btn => {
         break;
       case 'toggle-action-bar':
         toggleActionBar();
+        break;
+      case 'toggle-dev-features':
+        toggleDevFeatures();
         break;
     }
 

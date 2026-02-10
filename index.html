@@ -93,6 +93,10 @@
               <span>Show Action Bar</span>
               <span class="checkmark text-emerald-400">✓</span>
             </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-dev-features">
+              <span>Show Developmental Features</span>
+              <span class="checkmark text-emerald-400" style="display: none;">✓</span>
+            </button>
           </div>
         </div>
         <!-- Help Menu -->
@@ -155,7 +159,7 @@ Step two"></textarea>
             <div class="flex gap-2 flex-wrap">
               <button id="fill-all-btn" class="px-4 py-2 bg-emerald-500 text-slate-900 font-semibold rounded">Fill All</button>
               <button id="copy-instructions-btn" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded">Copy ChatGPT Instructions</button>
-              <button id="ai-import-btn" class="px-4 py-2 bg-purple-500 text-white font-semibold rounded">AI Import from Image</button>
+              <button id="ai-import-btn" class="dev-feature px-4 py-2 bg-purple-500 text-white font-semibold rounded" style="display: none;">AI Import from Image</button>
               <input id="ai-import-file" type="file" accept="image/*" hidden />
             </div>
             <div id="master-paste-status" class="text-sm text-slate-400"></div>

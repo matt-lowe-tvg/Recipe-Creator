@@ -1,0 +1,4538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recipe Creator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <style>
+    :root {
+      --page-w: 612px;
+      --page-h: 792px;
+    }
+
+    #title-el {
+      font-size: var(--title-font-size, 36px);
+    }
+
+
+
+    .exporting #meal-pill .pill {
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: -10px;
+    }
+
+    .page {
+      width: var(--page-w);
+      min-height: var(--page-h);
+      background: white;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .template-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 1;
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      padding: 20px;
+      color: #111;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    .title {
+      font-weight: 800;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+
+    .ing-table th,
+    .ing-table td {
+      line-height: 1.4;
+      border: 1px solid #111;
+      padding: 10px 6px;
+      white-space: normal;
+      word-break: break-word;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 14px;
+      min-height: 24px;
+    }
+
+    .ing-table .cell-content {
+      box-sizing: border-box;
+      display: block;
+      width: 100%;
+      min-height: 20px;
+    }
+
+    .exporting .ing-table .cell-content {
+      margin-top: -14px;
+      /* Only applies during export */
+    }
+
+    /* header cells */
+    .ing-table th {
+      background: #111;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    /* body cells */
+    .ing-table td {
+      background: #fff;
+      color: #111;
+      font-weight: 400;
+    }
+
+    /* optional zebra striping */
+    .ing-table tr:nth-child(even) td {
+      background: #f5f5f5;
+    }
+
+    .pill {
+      border: none;
+      border-radius: 9999px;
+      padding: 0 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      line-height: 1;
+    }
+
+    /* put this in your <style> block */
+    .ing-table {
+      font-size: 18px;
+    }
+
+    /* pick your size */
+
+    .left-panel {
+      background: #0d1b2a;
+      color: #fff;
+      height: 780px;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      max-width: none;
+      max-height: none;
+    }
+
+    .footer-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #2ecc71;
+      color: #0d1b2a;
+      font-weight: 700;
+      padding: 2px 3px;
+      display: none;
+    }
+
+    .page-break {
+      page-break-after: always;
+    }
+
+    .section-container {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: rgb(226 232 240);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid rgb(51 65 85);
+    }
+
+    #diet-pills {
+      margin-left: 0;
+      padding-left: 0;
+    }
+
+    /* Fix directions alignment on export */
+    .exporting #steps-preview {
+      padding-left: 0;
+    }
+
+    .exporting #steps-preview li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-left: 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .exporting #steps-preview li::before {
+      content: counter(list-item) ".";
+      counter-increment: list-item;
+      min-width: 20px;
+      flex-shrink: 0;
+      font-weight: bold;
+      /* Changed from normal to bold */
+    }
+
+    .exporting #steps-preview {
+      counter-reset: list-item;
+    }
+
+    /* Same fix for page 2 directions */
+    .exporting #steps-preview-cont {
+      padding-left: 0;
+    }
+
+    .exporting #steps-preview-cont li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-left: 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .exporting #steps-preview-cont li::before {
+      content: counter(list-item) ".";
+      counter-increment: list-item;
+      min-width: 20px;
+      flex-shrink: 0;
+      font-weight: bold;
+      /* Changed from normal to bold */
+    }
+
+    .exporting #steps-preview-cont {
+      counter-reset: list-item;
+    }
+
+    /* Also bold numbers in regular preview mode */
+    #steps-preview li::marker {
+      font-weight: bold;
+    }
+
+    #steps-preview-cont li::marker {
+      font-weight: bold;
+    }
+
+    .ing-table.no-borders th,
+    .ing-table.no-borders td {
+      border: none;
+      padding: 10px 6px;
+    }
+
+    .ing-table.no-borders {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    /* Hide the action bar during export */
+    .exporting #action-bar {
+      display: none !important;
+    }
+
+
+
+    /* Accordion */
+    .section-header {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-header .caret {
+      transition: transform .2s ease;
+      font-size: 0.9em;
+    }
+
+    .section-header[aria-expanded="true"] .caret {
+      transform: rotate(90deg);
+    }
+
+    .accordion-body {
+      display: none;
+    }
+
+    .accordion-body.open {
+      display: block;
+    }
+
+    /* Reset button */
+    .reset-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .reset-btn:hover {
+      color: #e2e8f0;
+      transform: rotate(-90deg);
+    }
+
+    .reset-btn:active {
+      transform: rotate(-90deg) scale(0.95);
+    }
+
+    /* Style Preset Cards */
+    .preset-card {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 2px solid rgba(148, 163, 184, 0.3);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .preset-card:hover {
+      border-color: rgba(148, 163, 184, 0.6);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .preset-card .preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      padding: 8px;
+    }
+
+    .preset-card .preview-panel {
+      width: 100%;
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .preset-card .title {
+      padding: 6px 8px;
+      background: rgba(15, 23, 42, 0.8);
+      text-align: center;
+      font-size: 11px;
+      color: #e2e8f0;
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .preset-card .delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1;
+      transition: all 0.2s;
+    }
+
+    .preset-card:hover .delete-btn {
+      display: flex;
+    }
+
+    .preset-card .delete-btn:hover {
+      background: rgba(220, 38, 38, 1);
+      transform: scale(1.1);
+    }
+
+    .preset-card.add-new {
+      background: rgba(16, 185, 129, 0.1);
+      border-style: dashed;
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    .preset-card.add-new:hover {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.8);
+    }
+
+    .preset-card.add-new .preview {
+      font-size: 32px;
+      color: rgba(16, 185, 129, 0.8);
+    }
+
+
+
+
+    :root {
+      --lp-font-size: 14px;
+      /* <- change this to taste */
+    }
+
+    /* Set the base font for the entire left panel */
+    .left-panel {
+      font-size: var(--lp-font-size);
+    }
+
+    /* Force Tailwind text-* utilities inside the left panel to inherit the base size */
+    .left-panel .text-xs,
+    .left-panel .text-sm,
+    .left-panel .text-base {
+      font-size: inherit !important;
+    }
+
+    /* do NOT force the title to inherit */
+    .left-panel .title {
+      font-weight: 800;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+
+    /* Title follows its own slider */
+    #title-el {
+      font-size: var(--title-font-size, 36px);
+    }
+
+    /* Help Tooltip */
+    .help-icon {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(148, 163, 184, 0.3);
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: help;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    .help-icon:hover {
+      background: rgba(148, 163, 184, 0.5);
+      color: #e2e8f0;
+    }
+
+    .help-icon .tooltip {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      background: rgba(15, 23, 42, 0.95);
+      color: #e2e8f0;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 1.4;
+      border-radius: 6px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      white-space: normal;
+      width: 250px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 1000;
+      pointer-events: none;
+      text-align: left;
+    }
+
+    .help-icon:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .help-icon .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      right: 8px;
+      border: 6px solid transparent;
+      border-top-color: rgba(15, 23, 42, 0.95);
+    }
+
+    .section-header-with-help {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .section-header-with-help .title-area {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+  </style>
+</head>
+
+
+
+
+
+
+
+<body class="min-h-screen text-slate-100" style="background: linear-gradient(135deg, #00462f 0%, #001536 100%); background-attachment: fixed;">
+  <div class="max-w-7xl mx-auto p-4 lg:p-6">
+    <header class="flex items-center justify-between mb-4">
+      <h1 class="text-xl font-bold">Recipe Creator</h1>
+      <input id="open-file" type="file" accept=".recipe,application/json" hidden />
+    </header>
+
+
+
+
+
+
+
+
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Controls -->
+      <section class="space-y-6">
+
+        <!-- Master Paste Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Master Paste</span>
+            <span class="help-icon">?
+              <span class="tooltip">Paste recipe data from ChatGPT in the master format. Click "Copy ChatGPT Instructions" to get the prompt, then paste your recipe screenshot with it in ChatGPT. Paste the result here and click "Fill All" to populate all fields automatically.</span>
+            </span>
+          </h2>
+          <div class="space-y-3">
+            <textarea id="master-paste" rows="12" class="w-full p-3 rounded bg-slate-800 font-mono text-xs"
+              placeholder="Paste your recipe in the master format here...
+
+Example:
+::META::
+Recipe Title;Lunch/Dinner;gf,wf;4;10;20;520;38;62;14
+
+::TEXT::
+Notes
+Additional notes here
+
+::INGREDIENTS::
+Ingredient;Amount (US);Amount (Metric)
+Tofu;28 oz;794 g
+
+::DIRECTIONS::
+Step one
+Step two"></textarea>
+            <div class="flex gap-2">
+              <button id="fill-all-btn" class="px-4 py-2 bg-emerald-500 text-slate-900 font-semibold rounded">Fill All</button>
+              <button id="copy-instructions-btn" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded">Copy ChatGPT Instructions</button>
+            </div>
+            <div id="master-paste-status" class="text-sm text-slate-400"></div>
+          </div>
+        </div>
+
+        <!-- Main Style Options -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Left Panel Style</span>
+            <span class="help-icon">?
+              <span class="tooltip">Customize the appearance of the left panel on page 1. Adjust colors, fonts, opacity, border, and position/scale. Changes apply in real-time to the preview.</span>
+            </span>
+          </h2>
+
+          <!-- Colors -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-200 text-sm">Colors</h3>
+              <button class="reset-btn" id="reset-colors" title="Reset colors to defaults">↻</button>
+            </div>
+            <div class="flex flex-wrap gap-4 items-center">
+              <div class="flex flex-col items-center gap-1">
+                <input id="left-bg-color" type="color" value="#0f172a" class="w-12 h-12 rounded cursor-pointer" />
+                <span class="text-xs text-slate-300">Background</span>
+              </div>
+              <div class="flex flex-col items-center gap-1">
+                <input id="left-font-color" type="color" value="#ffffff" class="w-12 h-12 rounded cursor-pointer" />
+                <span class="text-xs text-slate-300">Font Color</span>
+              </div>
+              <div class="flex flex-col items-center gap-1">
+                <input id="left-border-color" type="color" value="#000000" class="w-12 h-12 rounded cursor-pointer" />
+                <span class="text-xs text-slate-300">Border Color</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Font Sizes -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-200 text-sm">Font Sizes</h3>
+              <button class="reset-btn" id="reset-fonts" title="Reset font sizes to defaults">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Title Font Size</label>
+              <div class="flex items-center gap-3">
+                <input id="title-font" type="range" min="20" max="60" step="1" value="36"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="title-font-manual" type="number" min="20" max="60" step="1" value="36"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="title-font-value" class="text-sm min-w-[45px]">36px</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Panel Font Size</label>
+              <div class="flex items-center gap-3">
+                <input id="lp-font" type="range" min="10" max="20" step="1" value="14"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="lp-font-manual" type="number" min="10" max="20" step="1" value="14"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="lp-font-value" class="text-sm min-w-[45px]">14px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appearance -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-200 text-sm">Panel Appearance</h3>
+              <button class="reset-btn" id="reset-appearance" title="Reset appearance to defaults">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Opacity</label>
+              <div class="flex items-center gap-3">
+                <input id="opacity" type="range" min="0" max="1" step="0.05" value="1"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="opacity-manual" type="number" min="0" max="1" step="0.05" value="1"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="opacity-value" class="text-sm min-w-[45px]">100%</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Border Radius</label>
+              <div class="flex items-center gap-3">
+                <input id="border-radius" type="range" min="0" max="30" step="1" value="6"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="border-radius-manual" type="number" min="0" max="30" step="1" value="6"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="border-radius-value" class="text-sm min-w-[45px]">6px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Left Panel Position & Scale -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-200 text-sm">Left Panel - Position & Scale</h3>
+              <button class="reset-btn" id="reset-left-position" title="Reset left panel position & scale">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Scale</label>
+              <div class="flex items-center gap-3">
+                <input id="panel-scale" type="range" min="50" max="150" step="1" value="100"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="panel-scale-manual" type="number" min="50" max="150" step="1" value="100"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="panel-scale-value" class="text-sm min-w-[45px]">100%</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">X Position</label>
+              <div class="flex items-center gap-3">
+                <input id="panel-x" type="range" min="-100" max="100" step="1" value="0"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="panel-x-manual" type="number" min="-100" max="100" step="1" value="0"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="panel-x-value" class="text-sm min-w-[45px]">0px</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Y Position</label>
+              <div class="flex items-center gap-3">
+                <input id="panel-y" type="range" min="-100" max="100" step="1" value="0"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="panel-y-manual" type="number" min="-100" max="100" step="1" value="0"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="panel-y-value" class="text-sm min-w-[45px]">0px</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Height</label>
+              <div class="flex items-center gap-3">
+                <input id="panel-height" type="range" min="20" max="100" step="1" value="100"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="panel-height-manual" type="number" min="20" max="100" step="1" value="100"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="panel-height-value" class="text-sm min-w-[45px]">100%</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400 block mb-2">Anchor Position</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="panel-anchor" value="left" checked class="w-3 h-3" />
+                  <span class="text-sm">Left</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="panel-anchor" value="right" class="w-3 h-3" />
+                  <span class="text-sm">Right</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Panel Position & Scale -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <h3 class="font-semibold text-slate-200 text-sm">Right Panel - Position & Scale</h3>
+                <span class="text-xs text-slate-400">Link</span>
+                <label class="relative inline-block w-11 h-6 cursor-pointer">
+                  <input id="link-panels" type="checkbox" checked class="sr-only peer" />
+                  <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+              <button class="reset-btn" id="reset-right-position" title="Reset right panel position & scale">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Scale</label>
+              <div class="flex items-center gap-3">
+                <input id="right-panel-scale" type="range" min="50" max="150" step="1" value="100"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="right-panel-scale-manual" type="number" min="50" max="150" step="1" value="100"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="right-panel-scale-value" class="text-sm min-w-[45px]">100%</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">X Position</label>
+              <div class="flex items-center gap-3">
+                <input id="right-panel-x" type="range" min="-100" max="100" step="1" value="0"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="right-panel-x-manual" type="number" min="-100" max="100" step="1" value="0"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="right-panel-x-value" class="text-sm min-w-[45px]">0px</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Y Position</label>
+              <div class="flex items-center gap-3">
+                <input id="right-panel-y" type="range" min="-100" max="100" step="1" value="0"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="right-panel-y-manual" type="number" min="-100" max="100" step="1" value="0"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="right-panel-y-value" class="text-sm min-w-[45px]">0px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Border -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <input id="show-border" type="checkbox" />
+                <label for="show-border" class="text-sm text-slate-300 font-semibold">Enable Border</label>
+              </div>
+              <button class="reset-btn" id="reset-border" title="Reset border settings">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Border Width</label>
+              <div class="flex items-center gap-3">
+                <input id="border-size" type="range" min="0" max="10" step="1" value="2"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="border-size-manual" type="number" min="0" max="10" step="1" value="2"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="border-size-value" class="text-sm min-w-[45px]">2px</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ingredient Table Style Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Ingredient Table Style</span>
+            <span class="help-icon">?
+              <span class="tooltip">Customize the appearance of ingredient tables. Change colors, enable alternating row colors for better readability, and adjust opacity. All changes apply in real-time.</span>
+            </span>
+          </h2>
+
+          <!-- Alternating Rows Toggle -->
+          <div class="flex items-center gap-3 mb-4">
+            <input id="table-alternating" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+            <label for="table-alternating" class="text-sm text-slate-300">Enable Alternating Row Colors</label>
+          </div>
+
+          <!-- Table Colors -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-200 text-sm">Table Colors</h3>
+              <button class="reset-btn" id="reset-table-colors" title="Reset table colors to defaults">↻</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <!-- Header Colors -->
+              <div class="col-span-2 pt-2 border-t border-slate-700">
+                <label class="text-xs text-slate-400 block mb-2">Header</label>
+                <div class="flex gap-3">
+                  <div class="flex flex-col items-center gap-1">
+                    <input id="table-header-bg" type="color" value="#111111" class="w-12 h-12 rounded cursor-pointer" />
+                    <span class="text-xs text-slate-300">Background</span>
+                  </div>
+                  <div class="flex flex-col items-center gap-1">
+                    <input id="table-header-text" type="color" value="#ffffff" class="w-12 h-12 rounded cursor-pointer" />
+                    <span class="text-xs text-slate-300">Text</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row Colors -->
+              <div class="col-span-2 pt-2 border-t border-slate-700">
+                <label class="text-xs text-slate-400 block mb-2">Rows</label>
+                <div class="flex gap-3">
+                  <div class="flex flex-col items-center gap-1">
+                    <input id="table-row-bg" type="color" value="#ffffff" class="w-12 h-12 rounded cursor-pointer" />
+                    <span class="text-xs text-slate-300">Background</span>
+                  </div>
+                  <div class="flex flex-col items-center gap-1">
+                    <input id="table-row-text" type="color" value="#111111" class="w-12 h-12 rounded cursor-pointer" />
+                    <span class="text-xs text-slate-300">Text</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Alternate Row Colors -->
+              <div class="col-span-2 pt-2 border-t border-slate-700">
+                <label class="text-xs text-slate-400 block mb-2">Alternate Rows (when enabled)</label>
+                <div class="flex gap-3">
+                  <div class="flex flex-col items-center gap-1">
+                    <input id="table-alt-row-bg" type="color" value="#f1f5f9" class="w-12 h-12 rounded cursor-pointer" />
+                    <span class="text-xs text-slate-300">Background</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Border Color -->
+              <div class="col-span-2 pt-2 border-t border-slate-700">
+                <label class="text-xs text-slate-400 block mb-2">Border</label>
+                <div class="flex gap-3">
+                  <div class="flex flex-col items-center gap-1">
+                    <input id="table-border-color" type="color" value="#111111" class="w-12 h-12 rounded cursor-pointer" />
+                    <span class="text-xs text-slate-300">Border Color</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table Opacity -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <h3 class="font-semibold text-slate-200 text-sm">Table Opacity</h3>
+            <div class="space-y-2">
+              <div class="flex items-center gap-3">
+                <input id="table-opacity" type="range" min="0" max="100" step="5" value="100"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="table-opacity-manual" type="number" min="0" max="100" step="5" value="100"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="table-opacity-value" class="text-sm min-w-[45px]">100%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Style Presets Section -->I nee
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Style Presets</span>
+            <span class="help-icon">?
+              <span class="tooltip">Save and load your favorite left panel style combinations. Click a preset to apply it, or click "New Preset" to save your current style settings for later use.</span>
+            </span>
+          </h2>
+          <div class="space-y-3">
+            <div id="presets-grid" class="grid grid-cols-2 gap-3"></div>
+          </div>
+        </div>
+
+        <!-- Recipe Title Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <div class="flex items-center gap-2">
+              <input id="show-title" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+              <span>Recipe Title</span>
+            </div>
+            <span class="help-icon">?
+              <span class="tooltip">Enter your recipe title and customize its color. Adjust left/right padding to control text positioning. Uncheck to hide the title from the recipe.</span>
+            </span>
+          </h2>
+          <div class="space-y-3">
+            <div class="flex gap-2">
+              <input id="title" class="flex-1 px-3 py-2 rounded bg-slate-800" placeholder="Recipe Title" />
+              <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer grid place-items-center">
+                <input id="title-color" type="color" value="#ffffff" class="opacity-0 absolute" />
+                <span class="text-sm">Title Color</span>
+              </label>
+            </div>
+            <div class="flex gap-4">
+              <div>
+                <label class="text-sm">Left Padding</label>
+                <input id="pad-left" type="number" value="0" class="w-24 ml-2 px-2 py-1 rounded bg-slate-800" />
+              </div>
+              <div>
+                <label class="text-sm">Right Padding</label>
+                <input id="pad-right" type="number" value="0" class="w-24 ml-2 px-2 py-1 rounded bg-slate-800" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recipe Image Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-recipe-image" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Recipe Image</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Upload a photo of your recipe to appear on the left panel. Supports common image formats (JPG, PNG). Uncheck to hide the image.</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer">
+              <input id="recipe-img" type="file" accept="image/*" hidden /> Upload Image
+            </label>
+            <button id="clear-img" class="px-3 py-2 bg-slate-800 rounded">Clear Image</button>
+            <span id="img-name" class="text-sm text-slate-400">No image</span>
+          </div>
+
+          <!-- Image Adjustment Controls -->
+          <div class="mt-4 space-y-3 p-3 bg-slate-800/50 rounded">
+            <div class="text-sm font-semibold text-slate-300">Image Adjustments</div>
+
+            <!-- Shape Options -->
+            <div>
+              <label class="text-sm block mb-1">Shape</label>
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" name="img-shape" value="rectangle" checked class="w-3 h-3" />
+                  <span class="text-sm">Rectangle</span>
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" name="img-shape" value="rounded" class="w-3 h-3" />
+                  <span class="text-sm">Rounded</span>
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" name="img-shape" value="circle" class="w-3 h-3" />
+                  <span class="text-sm">Circle</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Border Radius (for rounded) -->
+            <div id="border-radius-control" style="display: none;">
+              <label class="text-sm flex items-center gap-2">
+                Border Radius
+                <input id="img-border-radius" type="range" min="0" max="50" value="0" class="flex-1" />
+                <span id="img-border-radius-value" class="text-xs w-10">0px</span>
+              </label>
+            </div>
+
+            <!-- Zoom -->
+            <div>
+              <label class="text-sm flex items-center gap-2">
+                Zoom
+                <input id="img-zoom" type="range" min="50" max="200" value="100" class="flex-1" />
+                <span id="img-zoom-value" class="text-xs w-12">100%</span>
+              </label>
+            </div>
+
+            <!-- Position X -->
+            <div>
+              <label class="text-sm flex items-center gap-2">
+                Position X
+                <input id="img-position-x" type="range" min="0" max="100" value="50" class="flex-1" />
+                <span id="img-position-x-value" class="text-xs w-10">50%</span>
+              </label>
+            </div>
+
+            <!-- Position Y -->
+            <div>
+              <label class="text-sm flex items-center gap-2">
+                Position Y
+                <input id="img-position-y" type="range" min="0" max="100" value="50" class="flex-1" />
+                <span id="img-position-y-value" class="text-xs w-10">50%</span>
+              </label>
+            </div>
+
+            <!-- Reset Button -->
+            <button id="reset-img-controls" class="w-full px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm">
+              Reset to Default
+            </button>
+          </div>
+        </div>
+
+        <!-- Logo Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-logo" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Logo</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Add your brand logo to appear at the top of the right panel. Adjust the size slider to scale the logo. Check the box to enable/disable.</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer">
+              <input id="logo-upload" type="file" accept="image/*" hidden /> Upload Logo
+            </label>
+            <button id="clear-logo" class="px-3 py-2 bg-slate-800 rounded">Clear Logo</button>
+            <span id="logo-name" class="text-sm text-slate-400">No logo</span>
+          </div>
+          <div class="flex items-center gap-3 mt-3">
+            <label class="text-sm flex-shrink-0">Logo Size:</label>
+            <input id="logo-size" type="range" min="50" max="400" value="200" class="flex-1" />
+            <span id="logo-size-value" class="text-sm w-12">200px</span>
+            <button id="reset-logo-size" class="reset-btn" title="Reset logo size to default">↻</button>
+          </div>
+        </div><!-- Meal Type and Dietary Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Meal Type & Dietary</span>
+            <span class="help-icon">?
+              <span class="tooltip">Select the meal category and dietary tags (GF=Gluten Free, SF=Soy Free, NF=Nut Free, WF=Wheat Free). These appear as pills on the left panel. Adjust vertical position to control placement.</span>
+            </span>
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <input id="show-meal-type" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+                <h3 class="font-semibold text-slate-200">Meal Type</h3>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Breakfast" /> Breakfast
+                </label>
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Lunch/Dinner" /> Lunch/Dinner
+                </label>
+
+                                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Smoothie" /> Smoothie
+                </label>
+
+
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Snack" /> Snack
+                </label>
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Dessert" /> Dessert
+                </label>
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="meal" value="Sauce" /> Sauce
+                </label>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <input id="show-dietary" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+                <h3 class="font-semibold text-slate-200">Dietary</h3>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <label class="flex items-center gap-2"><input id="gf" type="checkbox" /> GF</label>
+                <label class="flex items-center gap-2"><input id="sf" type="checkbox" /> SF</label>
+                <label class="flex items-center gap-2"><input id="nf" type="checkbox" /> NF</label>
+                <label class="flex items-center gap-2"><input id="wf" type="checkbox" /> WF</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dietary pills vertical position -->
+          <div class="space-y-2 mt-4 pt-3 border-t border-slate-700">
+            <h3 class="font-semibold text-slate-200">Dietary Position</h3>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-slate-300">Vertical Position:</span>
+              <input id="dietary-position" type="range" min="0" max="100" step="1" value="90"
+                class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+              <input id="dietary-position-manual" type="number" min="0" max="100" step="5" value="90"
+                class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+              <span id="dietary-position-value" class="text-sm">90%</span>
+            </div>
+          </div>
+
+
+
+          <!-- Meal type pill vertical position -->
+          <div class="space-y-2 mt-4 pt-3 border-t border-slate-700">
+            <h3 class="font-semibold text-slate-200">Meal Type Position</h3>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-slate-300">Vertical Position:</span>
+              <input id="mealtype-position" type="range" min="0" max="100" step="1" value="95"
+                class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+              <input id="mealtype-position-manual" type="number" min="0" max="100" step="5" value="95"
+                class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+              <span id="mealtype-position-value" class="text-sm">95%</span>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
+
+
+
+
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Recipe Information & Macros</span>
+            <span class="help-icon">?
+              <span class="tooltip">Enter serving size, prep/cook times, and nutritional macros. Toggle vertical layout to stack items. Adjust section spacing to control gap between info and macros. Fields with "0" or empty values will be hidden.</span>
+            </span>
+          </h2>
+
+          <div class="flex items-center gap-2 mb-3">
+            <label class="text-sm">Section Spacing:</label>
+            <input id="info-macro-gap" type="range" value="40" min="0" max="500"
+              class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+            <input id="info-macro-gap-manual" type="number" value="40" min="0" max="500"
+              class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+            <span id="info-macro-gap-value" class="text-sm">40 px</span>
+          </div>
+
+          <div id="info-macro-wrap" class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-800 rounded p-3 space-y-2">
+              <div class="flex items-center gap-2">
+                <input id="show-info-section" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+                <h3 class="font-semibold">Recipe Information</h3>
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <input id="info-layout-vertical" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+                <label class="text-sm">Vertical Layout</label>
+              </div>
+              <div class="grid grid-cols-3 items-center gap-2">
+                <label class="text-sm">Serves</label>
+                <input id="serves" class="col-span-2 px-2 py-1 rounded bg-slate-900" />
+                <label class="text-sm">Prep Time</label>
+                <div class="col-span-2 flex items-center gap-2">
+                  <input id="prep" class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">mins</span>
+                </div>
+                <label class="text-sm">Cook Time</label>
+                <div class="col-span-2 flex items-center gap-2">
+                  <input id="cook" class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">mins</span>
+                </div>
+              </div>
+            </div>
+            <div class="bg-slate-800 rounded p-3 space-y-2">
+              <div class="flex items-center gap-2">
+                <input id="show-macros" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+                <h3 class="font-semibold">Macros</h3>
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <input id="macros-layout-vertical" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+                <label class="text-sm">Vertical Layout</label>
+              </div>
+              <div class="grid grid-cols-3 items-center gap-2">
+                <label class="text-sm">Calories</label>
+                <input id="cal" class="col-span-2 px-2 py-1 rounded bg-slate-900" />
+                <label class="text-sm">Protein</label>
+                <div class="col-span-2 flex items-center gap-2"><input id="pro"
+                    class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">g</span></div>
+                <label class="text-sm">Carbs</label>
+                <div class="col-span-2 flex items-center gap-2"><input id="carb"
+                    class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">g</span></div>
+                <label class="text-sm">Fat</label>
+                <div class="col-span-2 flex items-center gap-2"><input id="fat"
+                    class="px-2 py-1 rounded bg-slate-900 w-24" /> <span class="text-sm">g</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Additional Text Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-text-sections" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Additional Text</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Add custom text sections like notes, tips, or storage instructions. Each section can have an optional title. Text appears on the left panel below the recipe title.</span>
+            </span>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <button id="add-text" class="px-3 py-1 bg-emerald-400 text-slate-900 rounded">Add Text Section</button>
+            </div>
+            <div id="text-sections" class="space-y-3"></div>
+          </div>
+        </div>
+
+        <!-- Ingredient Tables Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-ingredients" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Ingredient Tables</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Create ingredient tables with customizable rows and columns. Add multiple tables for complex recipes (e.g., "Bowl" and "Sauce"). Paste semicolon-separated data to quickly fill tables. Toggle table titles and borders as needed.</span>
+            </span>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-3 flex-wrap">
+                <button id="add-table" class="px-3 py-1 bg-emerald-400 text-slate-900 rounded">Add Table</button>
+                <label class="flex items-center gap-2">
+                  <input id="show-table-titles" type="checkbox" /> Show Table Titles
+                </label>
+                <label class="flex items-center gap-2">
+                  <input id="show-table-borders" type="checkbox" checked /> Show Table Borders
+                </label>
+              </div>
+              <button id="copy-ingredients-prompt-btn" class="px-3 py-1 bg-blue-500 text-white rounded text-sm">Copy ChatGPT Prompt</button>
+            </div>
+            <div id="ingredients-prompt-status" class="text-sm text-slate-400"></div>
+            <div id="tables" class="space-y-4"></div>
+          </div>
+        </div>
+
+        <!-- Directions Section -->
+        <div class="section-container">
+          <div class="flex items-center gap-2">
+            <input id="show-directions" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
+            <h2 class="section-header mb-0">Directions</h2>
+            <span class="help-icon">?
+              <span class="tooltip">Add cooking steps one by one or paste multiple steps separated by semicolons. Check "Show all directions on Page 2" to move all steps to page 2 (useful for long recipes). Steps are automatically numbered.</span>
+            </span>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <button id="add-step" class="px-3 py-1 bg-emerald-400 text-slate-900 rounded">Add Step</button>
+            </div>
+            <label class="flex items-center gap-2">
+              <input id="all-directions-page2" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
+              <span class="text-sm">Show all directions on Page 2</span>
+            </label>
+            <div class="flex gap-2">
+              <textarea id="paste-steps" rows="3" class="w-full p-2 rounded bg-slate-800"
+                placeholder="Paste steps separated by semicolons"></textarea>
+              <button id="fill-steps" class="px-3 py-1 bg-slate-800 rounded">Fill Steps</button>
+            </div>
+            <div id="steps" class="space-y-2"></div>
+          </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- Directions Positioning -->
+<div class="section-container">
+  <h2 class="section-header">
+    <span>Directions Positioning</span>
+    <span class="help-icon">?
+      <span class="tooltip">Fine-tune the vertical position of directions on the page. Enable manual positioning if your ingredient tables export shorter than they appear in preview, then adjust the offset to fill the gap.</span>
+    </span>
+  </h2>
+  <div class="space-y-3">
+    <label class="flex items-center gap-2">
+      <input id="steps-manual-enabled" type="checkbox" />
+      Enable manual positioning
+    </label>
+
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-slate-300">Offset Y:</span>
+      <input id="steps-offset" type="range" min="-200" max="600" step="1" value="0"
+             class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+      <input id="steps-offset-manual" type="number" min="-200" max="600" step="1" value="0"
+             class="w-24 px-2 py-1 rounded bg-slate-800 text-sm" />
+      <span id="steps-offset-value" class="text-sm">0 px</span>
+    </div>
+
+    <p class="text-xs text-slate-400">
+      Turn this on if your tables export shorter than they look in the preview. Move the Directions up to fill the gap.
+    </p>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- Templates Section -->
+        <div class="section-container">
+          <h2 class="section-header">
+            <span>Templates</span>
+            <span class="help-icon">?
+              <span class="tooltip">Upload background images for page 1 and optionally page 2. Templates appear behind all content. Supports JPG and PNG. Leave page 2 template empty if you only need one page.</span>
+            </span>
+          </h2>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer">
+                <input id="tpl1" type="file" accept="image/*" hidden /> Load Page 1 Template
+              </label>
+              <span id="tpl1-name" class="text-sm text-slate-400">No template</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <label class="px-3 py-2 bg-slate-800 rounded cursor-pointer">
+                <input id="tpl2" type="file" accept="image/*" hidden /> Load Page 2 Template
+              </label>
+              <span id="tpl2-name" class="text-sm text-slate-400">Optional</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview Section -->
+      <section id="preview-section" class="section-container sticky top-4 self-start">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="section-header mb-0 pb-0 border-b-0">Preview</h2>
+          <div class="text-xs text-slate-400">Letter 8.5 x 11</div>
+        </div>
+        <div id="preview" class="w-fit mx-auto">
+          <!-- PAGE 1 -->
+          <div id="page1" class="page">
+            <div id="tpl1-bg" class="template-bg"></div>
+            <div class="content grid grid-cols-12 gap-4 h-full">
+              <!-- Left panel -->
+              <div class="col-span-5 left-panel relative rounded-md overflow-hidden p-4">
+                <!-- Top content -->
+                <div>
+                  <div class="grid gap-3">
+                    <img id="recipe-img-el" class="w-full h-48 object-cover bg-white rounded" alt="" />
+                    <div>
+                      <h1 id="title-el" class="title text-3xl mb-2" style="color:#ffffff;">Recipe Title</h1>
+                      <div id="extra-text" class="space-y-2 text-sm"></div>
+                    </div>
+                  </div>
+                  <div id="info-section-container" class="mt-6 uppercase grid grid-cols-3 gap-4 text-sm text-left">
+                    <div>
+                      <div class="font-bold">SERVES</div>
+                      <div id="serves-el"></div>
+                    </div>
+                    <div>
+                      <div class="font-bold">PREP TIME</div>
+                      <div><span id="prep-el"></span> MINS</div>
+                    </div>
+                    <div>
+                      <div class="font-bold">COOK TIME</div>
+                      <div><span id="cook-el"></span> MINS</div>
+                    </div>
+                  </div>
+                  <div id="macros-grid" class="grid grid-cols-2 gap-y-2 gap-x-8 text-sm">
+                    <div>
+                      <div class="font-bold">CALORIES</div>
+                      <div id="cal-el" class="text-left"></div>
+                    </div>
+                    <div>
+                      <div class="font-bold">PROTEIN</div>
+                      <div id="pro-el" class="text-left"></div>
+                    </div>
+                    <div>
+                      <div class="font-bold">CARBS</div>
+                      <div id="carb-el" class="text-left"></div>
+                    </div>
+                    <div>
+                      <div class="font-bold">FAT</div>
+                      <div id="fat-el" class="text-left"></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Bottom content -->
+                <div class="mt-auto mb-16">
+                  <!-- Dietary pills -->
+                  <div class="flex justify-center gap-3" id="diet-pills"></div>
+                  <!-- Meal type pill -->
+                  <div class="flex justify-center gap-3 mt-3" id="meal-pill"></div>
+                </div>
+                <div class="footer-bar text-sm"></div>
+              </div>
+
+              <!-- Right column -->
+              <div class="col-span-7">
+                <div id="logo-container" class="mb-4 text-center" style="display: none;">
+                  <img id="logo-img" src="" alt="Logo" style="max-width: 200px; margin: 0 auto;" />
+                </div>
+                <div id="tables-preview" class="space-y-4"></div>
+<div id="directions-block" class="mt-4">
+  <div class="font-extrabold text-xl mb-2">Directions</div>
+  <ol id="steps-preview" class="list-decimal pl-4 space-y-2 text-sm"></ol>
+</div>
+
+
+       
+               
+              </div>
+            </div>
+          </div>
+          <!-- Sticky Button Bar -->
+          <div id="action-bar"
+            class="sticky bottom-4 mt-4 rounded-lg p-3 border shadow-lg" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-color: rgba(255, 255, 255, 0.1);">
+            <div class="flex gap-2 justify-center">
+
+              <button id="btn-open" class="px-3 py-2 bg-slate-700 text-white rounded">Open .recipe</button>
+              <button id="btn-save" class="px-3 py-2 bg-slate-700 text-white rounded">Save .recipe</button>
+
+              <button id="btn-export-pdf" class="px-3 py-2 bg-slate-700 text-white rounded font-semibold">Export PDF</button>
+
+
+
+              <button id="btn-export-jpeg" class="px-3 py-2 bg-slate-700 text-white rounded font-semibold">Export
+                JPEG</button>
+            </div>
+          </div>
+          <!-- PAGE 2 -->
+          <div id="page2" class="page mt-8 hidden">
+            <div id="tpl2-bg" class="template-bg"></div>
+            <div class="content">
+              <h1 id="page2-title" class="text-3xl font-bold text-center mb-4" style="display: none;"></h1>
+              <h2 class="text-xl font-bold">Directions Continued</h2>
+              <ol id="steps-preview-cont" class="list-decimal pl-4 space-y-2 text-sm mt-2"></ol>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <script>
+function renderPaginatedSteps() {
+  const steps1 = document.getElementById('steps-preview');
+  const steps2 = document.getElementById('steps-preview-cont');
+  const page1  = document.getElementById('page1');
+  const page2  = document.getElementById('page2');
+  const page2Subtitle = page2.querySelector('h2');
+  const page2MainTitle = document.getElementById('page2-title');
+
+  // Clear existing lists
+  steps1.innerHTML = '';
+  steps2.innerHTML = '';
+
+  // Early out if no steps
+  if (!state.steps || state.steps.length === 0) {
+    page2.classList.toggle('hidden', !state.tpl2URL);
+    if (page2MainTitle) page2MainTitle.style.display = 'none';
+    return;
+  }
+
+  // Check if all directions should go on page 2
+  if (state.allDirectionsOnPage2) {
+    // Hide directions on page 1
+    const directionsBlock = document.getElementById('directions-block');
+    if (directionsBlock) {
+      directionsBlock.style.display = 'none';
+    }
+
+    // Put all steps on page 2
+    state.steps.forEach(step => {
+      const li = document.createElement('li');
+      li.textContent = step;
+      steps2.appendChild(li);
+    });
+
+    // Update page 2 titles
+    if (page2Subtitle) {
+      page2Subtitle.textContent = 'Directions';
+    }
+
+    // Show and populate the main recipe title on page 2
+    if (page2MainTitle) {
+      page2MainTitle.textContent = state.title || 'Recipe Title';
+      page2MainTitle.style.display = '';
+    }
+
+    // Always show page 2 when all directions are there
+    page2.classList.remove('hidden');
+
+    // Reset counter for page 2
+    steps2.style.counterReset = 'list-item 0';
+    return;
+  } else {
+    // Show directions block on page 1
+    const directionsBlock = document.getElementById('directions-block');
+    if (directionsBlock && state.showDirections) {
+      directionsBlock.style.display = '';
+    }
+
+    // Update page 2 subtitle back to "Continued"
+    if (page2Subtitle) {
+      page2Subtitle.textContent = 'Directions Continued';
+    }
+
+    // Hide the main title on page 2 when in split mode
+    if (page2MainTitle) {
+      page2MainTitle.style.display = 'none';
+    }
+  }
+
+  // Original pagination logic
+  const pageRect  = page1.getBoundingClientRect();
+  const stepsRect = steps1.getBoundingClientRect();
+  let availableHeight = page1.clientHeight - Math.round(stepsRect.top - pageRect.top) - 24;
+
+  let firstPageCount = 0;
+
+  // Add as many steps as will visually fit
+  for (let i = 0; i < state.steps.length; i++) {
+    const li = document.createElement('li');
+    li.textContent = state.steps[i];
+    li.style.visibility = 'hidden';
+    steps1.appendChild(li);
+
+    const h = li.offsetHeight;
+
+    if (h <= availableHeight) {
+      li.style.visibility = '';
+      availableHeight -= li.offsetHeight;
+      firstPageCount++;
+    } else {
+      steps1.removeChild(li);
+      break;
+    }
+  }
+
+  // Put the remainder on page 2
+  for (let i = firstPageCount; i < state.steps.length; i++) {
+    const li = document.createElement('li');
+    li.textContent = state.steps[i];
+    steps2.appendChild(li);
+  }
+
+  // Show page 2 if needed or if a template is loaded
+  const needsPage2 = steps2.children.length > 0 || state.tpl2URL;
+  page2.classList.toggle('hidden', !needsPage2);
+
+  // Continue numbering on page 2
+  if (steps2.children.length > 0) {
+    steps2.style.counterReset = `list-item ${firstPageCount}`;
+  } else {
+    steps2.style.removeProperty('counter-reset');
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// ===============
+// Accordions (UI)
+// ===============
+(function initAccordions() {
+  const leftColumn = document.querySelector('section.space-y-6');
+  if (!leftColumn) return;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .section-header{display:flex;align-items:center;justify-content:space-between}
+    .section-container > [role="button"] {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    [role="button"] .caret{
+      transition:transform .2s ease;
+      font-size:.9em;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    [role="button"][aria-expanded="true"] .caret{transform:rotate(90deg)}
+    .accordion-body{display:none}
+    .accordion-body.open{display:block}
+  `;
+  document.head.appendChild(style);
+
+  leftColumn.querySelectorAll('.section-container').forEach((sec, idx) => {
+    const header = sec.querySelector('.section-header');
+    if (!header) return;
+
+    // Find the header wrapper (could be the header itself or a parent div)
+    let headerWrapper = header.parentElement;
+    if (headerWrapper === sec) {
+      // Header is direct child, no wrapper
+      headerWrapper = header;
+    }
+
+    let body = sec.querySelector('.accordion-body');
+    if (!body) {
+      body = document.createElement('div');
+      body.className = 'accordion-body';
+      const toMove = [];
+      // Move everything after the header wrapper into the body
+      for (let node = headerWrapper.nextElementSibling; node; node = headerWrapper.nextElementSibling) {
+        toMove.push(node);
+        sec.removeChild(node);
+      }
+      toMove.forEach(n => body.appendChild(n));
+      sec.appendChild(body);
+    }
+
+    if (!headerWrapper.querySelector('.caret')) {
+      const caret = document.createElement('span');
+      caret.className = 'caret';
+      caret.textContent = '▸';
+      headerWrapper.appendChild(caret);
+    }
+
+    headerWrapper.setAttribute('role', 'button');
+    headerWrapper.setAttribute('tabindex', '0');
+    headerWrapper.style.cursor = 'pointer';
+
+    headerWrapper.setAttribute('aria-expanded', 'false');
+    body.classList.remove('open');
+
+    const key = `accordion_open_${idx}`;
+    const toggle = () => {
+      const open = headerWrapper.getAttribute('aria-expanded') === 'true';
+      headerWrapper.setAttribute('aria-expanded', String(!open));
+      body.classList.toggle('open', !open);
+      try { localStorage.setItem(key, !open ? '1' : '0'); } catch {}
+    };
+
+    headerWrapper.addEventListener('click', (e) => {
+      // Don't toggle if clicking on a checkbox, input, or button
+      if (e.target.matches('input, button, label')) return;
+      toggle();
+    });
+    headerWrapper.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved === '1') {
+        headerWrapper.setAttribute('aria-expanded', 'true');
+        body.classList.add('open');
+      }
+    } catch {}
+  });
+})();
+
+
+// ==================
+// App State & Utils
+// ==================
+const state = {
+stepsManualEnabled: false,
+stepsOffset: 0,
+allDirectionsOnPage2: false,
+
+
+  mealTypePosition: 95,
+  showTableBorders: true,
+  dietaryPosition: 90,
+  leftPanelOpacity: 1,
+  infoMacroGap: 40,
+  tableAlternatingRows: false,
+  tableHeaderBgColor: '#111111',
+  tableHeaderTextColor: '#ffffff',
+  tableRowBgColor: '#ffffff',
+  tableRowTextColor: '#111111',
+  tableAltRowBgColor: '#f1f5f9',
+  tableBorderColor: '#111111',
+  tableOpacity: 100,
+  title: '',
+  titleColor: '#ffffff',
+  padLeft: 0,
+  padRight: 0,
+  recipeImageURL: '',
+  recipeImageZoom: 100,
+  recipeImageX: 50,
+  recipeImageY: 50,
+  recipeImageShape: 'rectangle',
+  recipeImageBorderRadius: 0,
+  logoURL: '',
+  showLogo: false,
+  mealType: '',
+  dietary: { gf: false, sf: false, nf: false, wf: false },
+  serves: '',
+  prep: '',
+  cook: '',
+  cal: '',
+  pro: '',
+  carb: '',
+  fat: '',
+  textSections: [],
+  tables: [],
+  steps: [],
+  tpl1URL: '',
+  tpl2URL: '',
+  leftPanelColor: '#0d1b2a',
+  leftPanelFontColor: '#ffffff',
+  leftPanelBorderEnabled: false,
+  leftPanelBorderColor: '#ffffff',
+  leftPanelBorderWidth: 2,
+  leftPanelBorderRadius: 6,
+  leftPanelScale: 100,
+  leftPanelX: 0,
+  leftPanelY: 0,
+  leftPanelHeight: 100,
+  leftPanelAnchor: 'left',
+  rightPanelScale: 100,
+  rightPanelX: 0,
+  rightPanelY: 0,
+  panelsLinked: true,
+  showTitle: true,
+  showRecipeImage: true,
+  showMealType: true,
+  showDietary: true,
+  showInfoSection: true,
+  showMacros: true,
+  showIngredients: true,
+  showDirections: true,
+  showTextSections: true,
+  infoLayoutVertical: false,
+  macrosLayoutVertical: false,
+  logoSize: 200,
+  mealTypeBackgroundColor: '#ffffff',
+  mealTypeTextColor: '#0f172a',
+  leftPanelFont: 14,
+  titleFont: 36
+};
+
+const el = id => document.getElementById(id);
+const $  = sel => document.querySelector(sel);
+
+function readFileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = e => resolve(e.target.result);
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
+
+// ==================
+// Master Paste Parser
+// ==================
+function parseMasterPaste(text) {
+  const sections = {};
+  const lines = text.split('\n');
+  let currentSection = null;
+  let currentContent = [];
+
+  // Parse into sections
+  for (let line of lines) {
+    const sectionMatch = line.match(/^::\s*([A-Z]+)(?:\s+([^:]+))?\s*::$/i);
+    if (sectionMatch) {
+      // Save previous section
+      if (currentSection) {
+        if (!sections[currentSection]) sections[currentSection] = [];
+        sections[currentSection].push({ name: null, lines: currentContent });
+      }
+      currentSection = sectionMatch[1].toUpperCase();
+      currentContent = [];
+    } else if (currentSection) {
+      currentContent.push(line);
+    }
+  }
+  // Save last section
+  if (currentSection) {
+    if (!sections[currentSection]) sections[currentSection] = [];
+    sections[currentSection].push({ name: null, lines: currentContent });
+  }
+
+  const result = {
+    title: '',
+    meal_type: '',
+    dietary_indicators: { gf: false, sf: false, nf: false, wf: false },
+    serves: '',
+    prep_time: '',
+    cook_time: '',
+    calories: '',
+    protein: '',
+    carbs: '',
+    fat: '',
+    extra_text_sections: [],
+    tables: [],
+    directions: []
+  };
+
+  // Parse META
+  if (sections.META && sections.META[0]) {
+    const metaLine = sections.META[0].lines.find(l => l.trim());
+    if (metaLine) {
+      const parts = metaLine.split(';').map(p => p.trim());
+      result.title = parts[0] || '';
+      result.meal_type = parts[1] || '';
+
+      // Parse dietary flags
+      const dietary = (parts[2] || '').toLowerCase();
+      result.dietary_indicators.gf = dietary.includes('gf');
+      result.dietary_indicators.sf = dietary.includes('sf');
+      result.dietary_indicators.nf = dietary.includes('nf');
+      result.dietary_indicators.wf = dietary.includes('wf');
+
+      result.serves = parts[3] || '';
+      result.prep_time = parts[4] || '';
+      result.cook_time = parts[5] || '';
+      result.calories = parts[6] || '';
+      result.protein = parts[7] || '';
+      result.carbs = parts[8] || '';
+      result.fat = parts[9] || '';
+    }
+  }
+
+  // Parse TEXT sections
+  if (sections.TEXT) {
+    sections.TEXT.forEach(block => {
+      const nonEmpty = block.lines.filter(l => l.trim());
+      if (nonEmpty.length === 0) return;
+
+      let title = '';
+      let text = '';
+
+      if (nonEmpty.length === 1) {
+        text = nonEmpty[0].trim();
+      } else {
+        title = nonEmpty[0].trim();
+        text = nonEmpty.slice(1).join('\n').trim();
+      }
+
+      result.extra_text_sections.push({ title, text });
+    });
+  }
+
+  // Parse INGREDIENTS
+  if (sections.INGREDIENTS && sections.INGREDIENTS[0]) {
+    const ingredientLines = sections.INGREDIENTS[0].lines;
+    const tableMatches = [];
+
+    // Check for ::TABLE tags
+    for (let i = 0; i < ingredientLines.length; i++) {
+      const match = ingredientLines[i].match(/^::\s*TABLE\s+([^:]+)\s*::$/i);
+      if (match) {
+        tableMatches.push({ index: i, name: match[1].trim() });
+      }
+    }
+
+    if (tableMatches.length > 0) {
+      // Multi-table mode
+      for (let t = 0; t < tableMatches.length; t++) {
+        const start = tableMatches[t].index + 1;
+        const end = t + 1 < tableMatches.length ? tableMatches[t + 1].index : ingredientLines.length;
+        const tableLines = ingredientLines.slice(start, end).filter(l => l.trim());
+
+        if (tableLines.length > 0) {
+          const rows = tableLines.map(line => line.split(';').map(cell => cell.trim()));
+          result.tables.push({
+            name: tableMatches[t].name,
+            rows: rows.length,
+            cols: rows[0]?.length || 3,
+            data: rows
+          });
+        }
+      }
+    } else {
+      // Single table mode
+      const tableLines = ingredientLines.filter(l => l.trim());
+      if (tableLines.length > 0) {
+        const rows = tableLines.map(line => line.split(';').map(cell => cell.trim()));
+
+        // Check if first row looks like a header, if not add default
+        const firstRow = rows[0];
+        const looksLikeHeader = firstRow && firstRow.length === 3 &&
+          (firstRow[0].toLowerCase().includes('ingredient') ||
+           firstRow[1].toLowerCase().includes('amount'));
+
+        const finalRows = looksLikeHeader ? rows : [['Ingredient', 'Amount (US)', 'Amount (Metric)'], ...rows];
+
+        result.tables.push({
+          name: 'Ingredients 1',
+          rows: finalRows.length,
+          cols: 3,
+          data: finalRows
+        });
+      }
+    }
+  }
+
+  // Parse DIRECTIONS
+  if (sections.DIRECTIONS && sections.DIRECTIONS[0]) {
+    result.directions = sections.DIRECTIONS[0].lines
+      .filter(l => l.trim())
+      .map(l => l.trim());
+  }
+
+  return result;
+}
+
+// Initialize CSS custom properties for font sizes
+document.documentElement.style.setProperty('--lp-font-size', `${state.leftPanelFont}px`);
+document.documentElement.style.setProperty('--title-font-size', `${state.titleFont}px`);
+
+
+// =======================
+// Left Panel Font Controls
+// =======================
+const lpSlider = el('lp-font');
+const lpManual = el('lp-font-manual');
+const lpValue  = el('lp-font-value');
+
+if (lpSlider && lpManual && lpValue) {
+  lpSlider.value = String(state.leftPanelFont);
+  lpManual.value = String(state.leftPanelFont);
+  lpValue.textContent = `${state.leftPanelFont}px`;
+
+  lpSlider.addEventListener('input', e => {
+    const value = parseInt(e.target.value, 10);
+    state.leftPanelFont = value;
+    lpManual.value = value;
+    lpValue.textContent = `${value}px`;
+    document.documentElement.style.setProperty('--lp-font-size', `${value}px`);
+    refreshPreview();
+  });
+
+  lpManual.addEventListener('input', e => {
+    const value = parseInt(e.target.value, 10);
+    if (value >= 10 && value <= 20) {
+      state.leftPanelFont = value;
+      lpSlider.value = value;
+      lpValue.textContent = `${value}px`;
+      document.documentElement.style.setProperty('--lp-font-size', `${value}px`);
+      refreshPreview();
+    }
+  });
+}
+
+
+// ==================
+// Title Font Controls
+// ==================
+const titleSlider = el('title-font');
+const titleManual = el('title-font-manual');
+const titleValue  = el('title-font-value');
+
+if (titleSlider && titleManual && titleValue) {
+  titleSlider.value = String(state.titleFont);
+  titleManual.value = String(state.titleFont);
+  titleValue.textContent = `${state.titleFont}px`;
+
+  // after grabbing titleSlider/titleManual/titleValue
+  document.documentElement.style.setProperty('--title-font-size', `${titleSlider.value}px`);
+
+  titleSlider.addEventListener('input', e => {
+    const value = parseInt(e.target.value, 10);
+    state.titleFont = value;
+    titleManual.value = value;
+    titleValue.textContent = `${value}px`;
+    document.documentElement.style.setProperty('--title-font-size', `${value}px`);
+    refreshPreview();
+  });
+
+  titleManual.addEventListener('input', e => {
+    const value = parseInt(e.target.value, 10);
+    if (value >= 20 && value <= 60) {
+      state.titleFont = value;
+      titleSlider.value = value;
+      titleValue.textContent = `${value}px`;
+      document.documentElement.style.setProperty('--title-font-size', `${value}px`);
+      refreshPreview();
+    }
+  });
+}
+
+
+// ==========================
+// Main Style: Color Pickers
+// ==========================
+const leftBgColor     = el('left-bg-color');
+const leftFontColor   = el('left-font-color');
+const leftBorderColor = el('left-border-color');
+
+if (leftBgColor) {
+  leftBgColor.value = state.leftPanelColor || '#0d1b2a';
+  leftBgColor.addEventListener('input', e => {
+    state.leftPanelColor = e.target.value;
+    refreshPreview();
+  });
+}
+if (leftFontColor) {
+  leftFontColor.value = state.leftPanelFontColor || '#ffffff';
+  leftFontColor.addEventListener('input', e => {
+    state.leftPanelFontColor = e.target.value;
+    refreshPreview();
+  });
+}
+if (leftBorderColor) {
+  leftBorderColor.value = state.leftPanelBorderColor || '#ffffff';
+  leftBorderColor.addEventListener('input', e => {
+    state.leftPanelBorderColor = e.target.value;
+    refreshPreview();
+  });
+}
+
+
+// =====================
+// Opacity (new IDs)
+// =====================
+const opacitySlider = el('opacity');
+const opacityManual = el('opacity-manual');
+const opacityValue  = el('opacity-value');
+
+if (opacitySlider && opacityManual && opacityValue) {
+  opacitySlider.value = String(state.leftPanelOpacity);
+  opacityManual.value = String(state.leftPanelOpacity);
+  opacityValue.textContent = `${Math.round(state.leftPanelOpacity * 100)}%`;
+
+  opacitySlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    opacityValue.textContent = `${Math.round(value * 100)}%`;
+    opacityManual.value = value;
+    state.leftPanelOpacity = value;
+    refreshPreview();
+  });
+
+  opacityManual.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    if (value >= 0 && value <= 1) {
+      opacityValue.textContent = `${Math.round(value * 100)}%`;
+      opacitySlider.value = value;
+      state.leftPanelOpacity = value;
+      refreshPreview();
+    }
+  });
+}
+
+
+// =====================
+// Border (new IDs)
+// =====================
+const borderEnabled = el('show-border');
+const borderSize    = el('border-size');
+const borderSizeMan = el('border-size-manual');
+const borderSizeVal = el('border-size-value');
+
+if (borderEnabled) {
+  borderEnabled.checked = !!state.leftPanelBorderEnabled;
+  borderEnabled.addEventListener('change', e => {
+    state.leftPanelBorderEnabled = e.target.checked;
+    refreshPreview();
+  });
+}
+
+function setBorderWidth(val) {
+  const v = Math.max(0, Math.min(10, parseInt(val || '0', 10)));
+  state.leftPanelBorderWidth = isNaN(v) ? 0 : v;
+  if (borderSize)    borderSize.value = state.leftPanelBorderWidth;
+  if (borderSizeMan) borderSizeMan.value = state.leftPanelBorderWidth;
+  if (borderSizeVal) borderSizeVal.textContent = `${state.leftPanelBorderWidth} px`;
+  refreshPreview();
+}
+
+if (borderSize)    borderSize.addEventListener('input', e => setBorderWidth(e.target.value));
+if (borderSizeMan) borderSizeMan.addEventListener('input', e => setBorderWidth(e.target.value));
+
+// init border width
+setBorderWidth(typeof state.leftPanelBorderWidth === 'number' ? state.leftPanelBorderWidth : 2);
+
+
+// =====================
+// Border Radius
+// =====================
+const borderRadius = el('border-radius');
+const borderRadiusMan = el('border-radius-manual');
+const borderRadiusVal = el('border-radius-value');
+
+function setBorderRadius(val) {
+  const v = Math.max(0, Math.min(30, parseInt(val || '0', 10)));
+  state.leftPanelBorderRadius = isNaN(v) ? 6 : v;
+  if (borderRadius)    borderRadius.value = state.leftPanelBorderRadius;
+  if (borderRadiusMan) borderRadiusMan.value = state.leftPanelBorderRadius;
+  if (borderRadiusVal) borderRadiusVal.textContent = `${state.leftPanelBorderRadius}px`;
+  refreshPreview();
+}
+
+if (borderRadius)    borderRadius.addEventListener('input', e => setBorderRadius(e.target.value));
+if (borderRadiusMan) borderRadiusMan.addEventListener('input', e => setBorderRadius(e.target.value));
+
+// init border radius
+setBorderRadius(typeof state.leftPanelBorderRadius === 'number' ? state.leftPanelBorderRadius : 6);
+
+
+// =====================
+// Panel Scale
+// =====================
+const panelScale = el('panel-scale');
+const panelScaleMan = el('panel-scale-manual');
+const panelScaleVal = el('panel-scale-value');
+
+function setPanelScale(val) {
+  const v = Math.max(50, Math.min(150, parseInt(val || '100', 10)));
+  state.leftPanelScale = isNaN(v) ? 100 : v;
+  if (panelScale)    panelScale.value = state.leftPanelScale;
+  if (panelScaleMan) panelScaleMan.value = state.leftPanelScale;
+  if (panelScaleVal) panelScaleVal.textContent = `${state.leftPanelScale}%`;
+  refreshPreview();
+}
+
+if (panelScale)    panelScale.addEventListener('input', e => setPanelScale(e.target.value));
+if (panelScaleMan) panelScaleMan.addEventListener('input', e => setPanelScale(e.target.value));
+
+// init scale
+setPanelScale(typeof state.leftPanelScale === 'number' ? state.leftPanelScale : 100);
+
+
+// =====================
+// Panel X Position
+// =====================
+const panelX = el('panel-x');
+const panelXMan = el('panel-x-manual');
+const panelXVal = el('panel-x-value');
+
+function setPanelX(val) {
+  const v = Math.max(-100, Math.min(100, parseInt(val || '0', 10)));
+  state.leftPanelX = isNaN(v) ? 0 : v;
+  if (panelX)    panelX.value = state.leftPanelX;
+  if (panelXMan) panelXMan.value = state.leftPanelX;
+  if (panelXVal) panelXVal.textContent = `${state.leftPanelX}px`;
+  refreshPreview();
+}
+
+if (panelX)    panelX.addEventListener('input', e => setPanelX(e.target.value));
+if (panelXMan) panelXMan.addEventListener('input', e => setPanelX(e.target.value));
+
+// init X
+setPanelX(typeof state.leftPanelX === 'number' ? state.leftPanelX : 0);
+
+
+// =====================
+// Panel Y Position
+// =====================
+const panelY = el('panel-y');
+const panelYMan = el('panel-y-manual');
+const panelYVal = el('panel-y-value');
+
+function setPanelY(val) {
+  const v = Math.max(-100, Math.min(100, parseInt(val || '0', 10)));
+  state.leftPanelY = isNaN(v) ? 0 : v;
+  if (panelY)    panelY.value = state.leftPanelY;
+  if (panelYMan) panelYMan.value = state.leftPanelY;
+  if (panelYVal) panelYVal.textContent = `${state.leftPanelY}px`;
+  refreshPreview();
+}
+
+if (panelY)    panelY.addEventListener('input', e => setPanelY(e.target.value));
+if (panelYMan) panelYMan.addEventListener('input', e => setPanelY(e.target.value));
+
+// init Y
+setPanelY(typeof state.leftPanelY === 'number' ? state.leftPanelY : 0);
+
+
+// =====================
+// Panel Height
+// =====================
+const panelHeight = el('panel-height');
+const panelHeightMan = el('panel-height-manual');
+const panelHeightVal = el('panel-height-value');
+
+function setPanelHeight(val) {
+  const v = Math.max(20, Math.min(100, parseInt(val || '100', 10)));
+  state.leftPanelHeight = isNaN(v) ? 100 : v;
+  if (panelHeight)    panelHeight.value = state.leftPanelHeight;
+  if (panelHeightMan) panelHeightMan.value = state.leftPanelHeight;
+  if (panelHeightVal) panelHeightVal.textContent = `${state.leftPanelHeight}%`;
+  refreshPreview();
+}
+
+if (panelHeight)    panelHeight.addEventListener('input', e => setPanelHeight(e.target.value));
+if (panelHeightMan) panelHeightMan.addEventListener('input', e => setPanelHeight(e.target.value));
+
+// init Height
+setPanelHeight(typeof state.leftPanelHeight === 'number' ? state.leftPanelHeight : 100);
+
+
+// =====================
+// Panel Anchor
+// =====================
+document.querySelectorAll('input[name="panel-anchor"]').forEach(radio => {
+  radio.addEventListener('change', e => {
+    state.leftPanelAnchor = e.target.value;
+    refreshPreview();
+  });
+});
+
+
+// =====================
+// Link Panels Toggle
+// =====================
+const linkPanels = el('link-panels');
+if (linkPanels) {
+  linkPanels.checked = !!state.panelsLinked;
+  linkPanels.addEventListener('change', e => {
+    state.panelsLinked = e.target.checked;
+
+    // Disable/enable right panel controls
+    const rightControls = [
+      el('right-panel-scale'), el('right-panel-scale-manual'),
+      el('right-panel-x'), el('right-panel-x-manual'),
+      el('right-panel-y'), el('right-panel-y-manual')
+    ];
+
+    rightControls.forEach(ctrl => {
+      if (ctrl) ctrl.disabled = state.panelsLinked;
+    });
+
+    refreshPreview();
+  });
+}
+
+
+// =====================
+// Right Panel Scale
+// =====================
+const rightPanelScale = el('right-panel-scale');
+const rightPanelScaleMan = el('right-panel-scale-manual');
+const rightPanelScaleVal = el('right-panel-scale-value');
+
+function setRightPanelScale(val) {
+  const v = Math.max(50, Math.min(150, parseInt(val || '100', 10)));
+  state.rightPanelScale = isNaN(v) ? 100 : v;
+  if (rightPanelScale)    rightPanelScale.value = state.rightPanelScale;
+  if (rightPanelScaleMan) rightPanelScaleMan.value = state.rightPanelScale;
+  if (rightPanelScaleVal) rightPanelScaleVal.textContent = `${state.rightPanelScale}%`;
+  refreshPreview();
+}
+
+if (rightPanelScale)    rightPanelScale.addEventListener('input', e => setRightPanelScale(e.target.value));
+if (rightPanelScaleMan) rightPanelScaleMan.addEventListener('input', e => setRightPanelScale(e.target.value));
+
+// init scale
+setRightPanelScale(typeof state.rightPanelScale === 'number' ? state.rightPanelScale : 100);
+
+
+// =====================
+// Right Panel X Position
+// =====================
+const rightPanelX = el('right-panel-x');
+const rightPanelXMan = el('right-panel-x-manual');
+const rightPanelXVal = el('right-panel-x-value');
+
+function setRightPanelX(val) {
+  const v = Math.max(-100, Math.min(100, parseInt(val || '0', 10)));
+  state.rightPanelX = isNaN(v) ? 0 : v;
+  if (rightPanelX)    rightPanelX.value = state.rightPanelX;
+  if (rightPanelXMan) rightPanelXMan.value = state.rightPanelX;
+  if (rightPanelXVal) rightPanelXVal.textContent = `${state.rightPanelX}px`;
+  refreshPreview();
+}
+
+if (rightPanelX)    rightPanelX.addEventListener('input', e => setRightPanelX(e.target.value));
+if (rightPanelXMan) rightPanelXMan.addEventListener('input', e => setRightPanelX(e.target.value));
+
+// init X
+setRightPanelX(typeof state.rightPanelX === 'number' ? state.rightPanelX : 0);
+
+
+// =====================
+// Right Panel Y Position
+// =====================
+const rightPanelY = el('right-panel-y');
+const rightPanelYMan = el('right-panel-y-manual');
+const rightPanelYVal = el('right-panel-y-value');
+
+function setRightPanelY(val) {
+  const v = Math.max(-100, Math.min(100, parseInt(val || '0', 10)));
+  state.rightPanelY = isNaN(v) ? 0 : v;
+  if (rightPanelY)    rightPanelY.value = state.rightPanelY;
+  if (rightPanelYMan) rightPanelYMan.value = state.rightPanelY;
+  if (rightPanelYVal) rightPanelYVal.textContent = `${state.rightPanelY}px`;
+  refreshPreview();
+}
+
+if (rightPanelY)    rightPanelY.addEventListener('input', e => setRightPanelY(e.target.value));
+if (rightPanelYMan) rightPanelYMan.addEventListener('input', e => setRightPanelY(e.target.value));
+
+// init Y
+setRightPanelY(typeof state.rightPanelY === 'number' ? state.rightPanelY : 0);
+
+// Initialize right panel control states based on link
+if (linkPanels) {
+  const rightControls = [
+    el('right-panel-scale'), el('right-panel-scale-manual'),
+    el('right-panel-x'), el('right-panel-x-manual'),
+    el('right-panel-y'), el('right-panel-y-manual')
+  ];
+
+  rightControls.forEach(ctrl => {
+    if (ctrl) ctrl.disabled = state.panelsLinked;
+  });
+}
+
+
+// =======================
+// Reset Buttons
+// =======================
+
+// Reset Colors
+el('reset-colors')?.addEventListener('click', () => {
+  state.leftPanelColor = '#0d1b2a';
+  state.leftPanelFontColor = '#ffffff';
+  state.leftPanelBorderColor = '#000000';
+
+  if (leftBgColor) leftBgColor.value = state.leftPanelColor;
+  if (leftFontColor) leftFontColor.value = state.leftPanelFontColor;
+  if (leftBorderColor) leftBorderColor.value = state.leftPanelBorderColor;
+
+  refreshPreview();
+});
+
+// Reset Font Sizes
+el('reset-fonts')?.addEventListener('click', () => {
+  state.titleFont = 36;
+  state.leftPanelFont = 14;
+
+  document.documentElement.style.setProperty('--title-font-size', '36px');
+  document.documentElement.style.setProperty('--lp-font-size', '14px');
+
+  if (titleSlider) titleSlider.value = 36;
+  if (titleManual) titleManual.value = 36;
+  if (titleValue) titleValue.textContent = '36px';
+
+  if (lpSlider) lpSlider.value = 14;
+  if (lpManual) lpManual.value = 14;
+  if (lpValue) lpValue.textContent = '14px';
+
+  refreshPreview();
+});
+
+// Reset Appearance
+el('reset-appearance')?.addEventListener('click', () => {
+  state.leftPanelOpacity = 1;
+  state.leftPanelBorderRadius = 6;
+
+  if (opacitySlider) opacitySlider.value = 1;
+  if (opacityManual) opacityManual.value = 1;
+  if (opacityValue) opacityValue.textContent = '100%';
+
+  setBorderRadius(6);
+
+  refreshPreview();
+});
+
+// Reset Left Panel Position & Scale
+el('reset-left-position')?.addEventListener('click', () => {
+  setPanelScale(100);
+  setPanelX(0);
+  setPanelY(0);
+  setPanelHeight(100);
+  state.leftPanelAnchor = 'top';
+  document.querySelector('input[name="panel-anchor"][value="top"]').checked = true;
+});
+
+// Reset Right Panel Position & Scale
+el('reset-right-position')?.addEventListener('click', () => {
+  setRightPanelScale(100);
+  setRightPanelX(0);
+  setRightPanelY(0);
+});
+
+// Reset Border
+el('reset-border')?.addEventListener('click', () => {
+  state.leftPanelBorderEnabled = false;
+  state.leftPanelBorderWidth = 2;
+
+  if (borderEnabled) borderEnabled.checked = false;
+  setBorderWidth(2);
+
+  refreshPreview();
+});
+
+
+// =======================
+// Element Visibility Toggles
+// =======================
+const visibilityToggles = {
+  'show-title': 'showTitle',
+  'show-recipe-image': 'showRecipeImage',
+  'show-logo': 'showLogo',
+  'show-meal-type': 'showMealType',
+  'show-dietary': 'showDietary',
+  'show-info-section': 'showInfoSection',
+  'show-macros': 'showMacros',
+  'show-ingredients': 'showIngredients',
+  'show-directions': 'showDirections',
+  'show-text-sections': 'showTextSections'
+};
+
+Object.entries(visibilityToggles).forEach(([id, stateKey]) => {
+  const toggle = el(id);
+  if (toggle) {
+    toggle.addEventListener('change', e => {
+      state[stateKey] = e.target.checked;
+      refreshPreview();
+    });
+  }
+});
+
+// Info layout toggle
+el('info-layout-vertical')?.addEventListener('change', e => {
+  state.infoLayoutVertical = e.target.checked;
+  refreshPreview();
+});
+
+// Macros layout toggle
+el('macros-layout-vertical')?.addEventListener('change', e => {
+  state.macrosLayoutVertical = e.target.checked;
+  refreshPreview();
+});
+
+// =======================
+// Style Presets
+// =======================
+const PRESETS_KEY = 'recipe_style_presets';
+
+function getStylePreset() {
+  return {
+    leftPanelColor: state.leftPanelColor,
+    leftPanelFontColor: state.leftPanelFontColor,
+    leftPanelBorderEnabled: state.leftPanelBorderEnabled,
+    leftPanelBorderColor: state.leftPanelBorderColor,
+    leftPanelBorderWidth: state.leftPanelBorderWidth,
+    leftPanelBorderRadius: state.leftPanelBorderRadius,
+    leftPanelOpacity: state.leftPanelOpacity,
+    leftPanelScale: state.leftPanelScale,
+    leftPanelX: state.leftPanelX,
+    leftPanelY: state.leftPanelY,
+    rightPanelScale: state.rightPanelScale,
+    rightPanelX: state.rightPanelX,
+    rightPanelY: state.rightPanelY,
+    panelsLinked: state.panelsLinked,
+    titleColor: state.titleColor,
+    titleFont: state.titleFont,
+    leftPanelFont: state.leftPanelFont
+  };
+}
+
+function applyStylePreset(preset) {
+  state.leftPanelColor = preset.leftPanelColor;
+  state.leftPanelFontColor = preset.leftPanelFontColor;
+  state.leftPanelBorderEnabled = preset.leftPanelBorderEnabled;
+  state.leftPanelBorderColor = preset.leftPanelBorderColor;
+  state.leftPanelBorderWidth = preset.leftPanelBorderWidth;
+  state.leftPanelBorderRadius = preset.leftPanelBorderRadius;
+  state.leftPanelOpacity = preset.leftPanelOpacity;
+  state.leftPanelScale = preset.leftPanelScale;
+  state.leftPanelX = preset.leftPanelX;
+  state.leftPanelY = preset.leftPanelY;
+  state.rightPanelScale = preset.rightPanelScale;
+  state.rightPanelX = preset.rightPanelX;
+  state.rightPanelY = preset.rightPanelY;
+  state.panelsLinked = preset.panelsLinked;
+  state.titleColor = preset.titleColor;
+  state.titleFont = preset.titleFont;
+  state.leftPanelFont = preset.leftPanelFont;
+
+  // Update UI controls
+  if (leftBgColor) leftBgColor.value = state.leftPanelColor;
+  if (leftFontColor) leftFontColor.value = state.leftPanelFontColor;
+  if (leftBorderColor) leftBorderColor.value = state.leftPanelBorderColor;
+  if (borderEnabled) borderEnabled.checked = state.leftPanelBorderEnabled;
+  if (el('title-color')) el('title-color').value = state.titleColor;
+
+  setBorderWidth(state.leftPanelBorderWidth);
+  setBorderRadius(state.leftPanelBorderRadius);
+  setPanelScale(state.leftPanelScale);
+  setPanelX(state.leftPanelX);
+  setPanelY(state.leftPanelY);
+  setPanelHeight(state.leftPanelHeight);
+  document.querySelectorAll('input[name="panel-anchor"]').forEach(r => r.checked = (r.value === state.leftPanelAnchor));
+  setRightPanelScale(state.rightPanelScale);
+  setRightPanelX(state.rightPanelX);
+  setRightPanelY(state.rightPanelY);
+
+  if (linkPanels) linkPanels.checked = state.panelsLinked;
+  if (opacitySlider) opacitySlider.value = state.leftPanelOpacity;
+  if (opacityManual) opacityManual.value = state.leftPanelOpacity;
+  if (opacityValue) opacityValue.textContent = `${Math.round(state.leftPanelOpacity * 100)}%`;
+
+  document.documentElement.style.setProperty('--title-font-size', `${state.titleFont}px`);
+  document.documentElement.style.setProperty('--lp-font-size', `${state.leftPanelFont}px`);
+
+  if (titleSlider) titleSlider.value = state.titleFont;
+  if (titleManual) titleManual.value = state.titleFont;
+  if (titleValue) titleValue.textContent = `${state.titleFont}px`;
+
+  if (lpSlider) lpSlider.value = state.leftPanelFont;
+  if (lpManual) lpManual.value = state.leftPanelFont;
+  if (lpValue) lpValue.textContent = `${state.leftPanelFont}px`;
+
+  refreshPreview();
+}
+
+function loadPresets() {
+  try {
+    const saved = localStorage.getItem(PRESETS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePresets(presets) {
+  try {
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+  } catch (e) {
+    console.error('Failed to save presets:', e);
+  }
+}
+
+function renderPresets() {
+  const grid = el('presets-grid');
+  if (!grid) return;
+
+  const presets = loadPresets();
+  grid.innerHTML = '';
+
+  // Render existing presets
+  presets.forEach((preset, idx) => {
+    const card = document.createElement('div');
+    card.className = 'preset-card';
+
+    const preview = document.createElement('div');
+    preview.className = 'preview';
+
+    const previewPanel = document.createElement('div');
+    previewPanel.className = 'preview-panel';
+    previewPanel.style.backgroundColor = preset.style.leftPanelColor;
+    previewPanel.style.opacity = preset.style.leftPanelOpacity;
+    previewPanel.style.borderRadius = `${preset.style.leftPanelBorderRadius}px`;
+    if (preset.style.leftPanelBorderEnabled) {
+      previewPanel.style.border = `${preset.style.leftPanelBorderWidth}px solid ${preset.style.leftPanelBorderColor}`;
+    }
+    previewPanel.textContent = 'Aa';
+    previewPanel.style.color = preset.style.leftPanelFontColor;
+
+    preview.appendChild(previewPanel);
+    card.appendChild(preview);
+
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = preset.name;
+    card.appendChild(title);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '×';
+    deleteBtn.title = 'Delete preset';
+    deleteBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (confirm(`Delete preset "${preset.name}"?`)) {
+        const updated = presets.filter((_, i) => i !== idx);
+        savePresets(updated);
+        renderPresets();
+      }
+    };
+    card.appendChild(deleteBtn);
+
+    card.onclick = () => {
+      applyStylePreset(preset.style);
+    };
+
+    grid.appendChild(card);
+  });
+
+  // Add "new preset" card
+  const addCard = document.createElement('div');
+  addCard.className = 'preset-card add-new';
+
+  const addPreview = document.createElement('div');
+  addPreview.className = 'preview';
+  addPreview.textContent = '+';
+  addCard.appendChild(addPreview);
+
+  const addTitle = document.createElement('div');
+  addTitle.className = 'title';
+  addTitle.textContent = 'New Preset';
+  addCard.appendChild(addTitle);
+
+  addCard.onclick = () => {
+    const name = prompt('Enter a name for this preset:');
+    if (name && name.trim()) {
+      const newPreset = {
+        name: name.trim(),
+        style: getStylePreset()
+      };
+      const updated = [...presets, newPreset];
+      savePresets(updated);
+      renderPresets();
+    }
+  };
+
+  grid.appendChild(addCard);
+}
+
+// Initialize presets
+renderPresets();
+
+
+// =======================
+// Other Controls & Logic
+// =======================
+const gapSlider  = el('info-macro-gap');
+const gapManual  = el('info-macro-gap-manual');
+const gapValueEl = el('info-macro-gap-value');
+if (gapSlider && gapManual && gapValueEl) {
+  gapSlider.addEventListener('input', (e) => {
+    const value = e.target.value;
+    gapValueEl.textContent = `${value} px`;
+    gapManual.value = value;
+    state.infoMacroGap = parseInt(value, 10);
+    refreshPreview();
+  });
+  gapManual.addEventListener('input', (e) => {
+    const value = e.target.value;
+    gapValueEl.textContent = `${value} px`;
+    gapSlider.value = value;
+    state.infoMacroGap = parseInt(value, 10);
+    refreshPreview();
+  });
+}
+
+const mealTypeSlider = el('mealtype-position');
+const mealTypeManual = el('mealtype-position-manual');
+const mealTypeValue  = el('mealtype-position-value');
+if (mealTypeSlider && mealTypeManual && mealTypeValue) {
+  mealTypeSlider.value = String(state.mealTypePosition);
+  mealTypeManual.value = String(state.mealTypePosition);
+  mealTypeValue.textContent = `${state.mealTypePosition}%`;
+
+  mealTypeSlider.addEventListener('input', e => {
+    const value = parseInt(e.target.value, 10);
+    mealTypeValue.textContent = `${value}%`;
+    mealTypeManual.value = value;
+    state.mealTypePosition = value;
+    refreshPreview();
+  });
+  mealTypeManual.addEventListener('input', e => {
+    const value = parseInt(e.target.value, 10);
+    if (value >= 0 && value <= 100) {
+      mealTypeValue.textContent = `${value}%`;
+      mealTypeSlider.value = value;
+      state.mealTypePosition = value;
+      refreshPreview();
+    }
+  });
+}
+
+const dietarySlider = el('dietary-position');
+const dietaryManual = el('dietary-position-manual');
+const dietaryValue  = el('dietary-position-value');
+if (dietarySlider && dietaryManual && dietaryValue) {
+  dietarySlider.value = String(state.dietaryPosition);
+  dietaryManual.value = String(state.dietaryPosition);
+  dietaryValue.textContent = `${state.dietaryPosition}%`;
+
+  dietarySlider.addEventListener('input', (e) => {
+    const value = parseInt(e.target.value, 10);
+    dietaryValue.textContent = `${value}%`;
+    dietaryManual.value = value;
+    state.dietaryPosition = value;
+    refreshPreview();
+  });
+  dietaryManual.addEventListener('input', (e) => {
+    const value = parseInt(e.target.value, 10);
+    if (value >= 0 && value <= 100) {
+      dietaryValue.textContent = `${value}%`;
+      dietarySlider.value = value;
+      state.dietaryPosition = value;
+      refreshPreview();
+    }
+  });
+}
+
+function applyRowHeights() {
+  const tables = el('tables-preview').querySelectorAll('table.ing-table');
+  tables.forEach(table => {
+    table.querySelectorAll('.cell-content').forEach(content => {
+      content.style.removeProperty('height');
+    });
+  });
+}
+
+const showBordersChk = el('show-table-borders');
+if (showBordersChk) {
+  showBordersChk.checked = state.showTableBorders;
+  showBordersChk.addEventListener('change', e => {
+    state.showTableBorders = e.target.checked;
+    refreshPreview();
+  });
+}
+
+const btnReset = el('btn-reset');
+if (btnReset) {
+  btnReset.addEventListener('click', () => {
+    if (confirm('Are you sure you want to reset? All unsaved changes will be lost.')) {
+      location.reload();
+    }
+  });
+}
+
+
+// ==================
+// Preview Rendering
+// ==================
+function refreshPreview() {
+  el('macros-grid').style.marginTop = state.infoMacroGap + 'px';
+
+  // Title visibility
+  const titleEl = el('title-el');
+  if (state.showTitle) {
+    titleEl.textContent = state.title || 'Recipe Title';
+    titleEl.style.color = state.titleColor || '#ffffff';
+    const pageWidth = 612;
+    const maxWidth = Math.max(80, pageWidth - (state.padLeft + state.padRight));
+    titleEl.style.paddingLeft = state.padLeft + 'px';
+    titleEl.style.maxWidth = maxWidth + 'px';
+    titleEl.style.display = '';
+  } else {
+    titleEl.style.display = 'none';
+  }
+
+  // Template backgrounds
+  const tpl1Bg = el('tpl1-bg');
+  const tpl2Bg = el('tpl2-bg');
+  if (state.tpl1URL) {
+    tpl1Bg.style.backgroundImage = `url(${state.tpl1URL})`;
+  } else {
+    tpl1Bg.style.backgroundImage = '';
+  }
+  if (state.tpl2URL) {
+    tpl2Bg.style.backgroundImage = `url(${state.tpl2URL})`;
+  } else {
+    tpl2Bg.style.backgroundImage = '';
+  }
+
+  // Recipe image visibility and styling
+  const img = el('recipe-img-el');
+  if (state.showRecipeImage && state.recipeImageURL) {
+    img.crossOrigin = 'anonymous';
+    img.src = state.recipeImageURL;
+    img.classList.remove('hidden');
+
+    // Apply transformations
+    img.style.objectFit = 'cover';
+    img.style.objectPosition = `${state.recipeImageX}% ${state.recipeImageY}%`;
+    img.style.transform = `scale(${state.recipeImageZoom / 100})`;
+
+    // Apply shape styling
+    if (state.recipeImageShape === 'circle') {
+      img.style.borderRadius = '50%';
+      img.style.aspectRatio = '1';
+    } else if (state.recipeImageShape === 'rounded') {
+      img.style.borderRadius = `${state.recipeImageBorderRadius}px`;
+      img.style.aspectRatio = '';
+    } else {
+      img.style.borderRadius = '0';
+      img.style.aspectRatio = '';
+    }
+  } else {
+    img.removeAttribute('src');
+    img.classList.add('hidden');
+  }
+
+  // Text sections visibility
+  const extra = el('extra-text');
+  extra.innerHTML = '';
+  if (state.showTextSections) {
+    state.textSections.forEach(sec => {
+      if (sec.title) {
+        const h = document.createElement('div');
+        h.className = 'font-bold text-sm';
+        h.style.color = 'inherit';
+        h.textContent = sec.title;
+        extra.appendChild(h);
+      }
+      if (sec.text) {
+        const p = document.createElement('div');
+        p.className = 'text-sm';
+        p.style.color = 'inherit';
+        p.textContent = sec.text;
+        extra.appendChild(p);
+      }
+    });
+  }
+
+  // Info section visibility and layout
+  const servesEl = el('serves-el');
+  const prepEl = el('prep-el');
+  const cookEl = el('cook-el');
+  const infoContainer = el('info-section-container');
+
+  if (state.showInfoSection) {
+    servesEl.textContent = state.serves || '';
+    prepEl.textContent = state.prep || '';
+    cookEl.textContent = state.cook || '';
+
+    // Hide individual fields if they're 0 or empty
+    const servesHasValue = state.serves && state.serves !== '0';
+    const prepHasValue = state.prep && state.prep !== '0';
+    const cookHasValue = state.cook && state.cook !== '0';
+
+    servesEl.parentElement.parentElement.style.display = servesHasValue ? '' : 'none';
+    prepEl.parentElement.parentElement.style.display = prepHasValue ? '' : 'none';
+    cookEl.parentElement.parentElement.style.display = cookHasValue ? '' : 'none';
+
+    // Toggle between horizontal and vertical layout
+    if (state.infoLayoutVertical) {
+      infoContainer.className = 'mt-6 uppercase flex flex-col gap-2 text-sm text-left';
+    } else {
+      infoContainer.className = 'mt-6 uppercase grid grid-cols-3 gap-4 text-sm text-left';
+    }
+
+    // Hide entire container if all fields are empty
+    const hasAnyValue = servesHasValue || prepHasValue || cookHasValue;
+    infoContainer.style.display = hasAnyValue ? '' : 'none';
+  } else {
+    servesEl.parentElement.parentElement.style.display = 'none';
+    prepEl.parentElement.parentElement.style.display = 'none';
+    cookEl.parentElement.parentElement.style.display = 'none';
+    infoContainer.style.display = 'none';
+  }
+
+  // Macros visibility
+  const macrosGrid = el('macros-grid');
+  if (state.showMacros) {
+    const calEl = el('cal-el');
+    const proEl = el('pro-el');
+    const carbEl = el('carb-el');
+    const fatEl = el('fat-el');
+
+    // Set text content
+    calEl.textContent = state.cal || '0';
+    proEl.textContent = (state.pro || '0') + ' g';
+    carbEl.textContent = (state.carb || '0') + ' g';
+    fatEl.textContent = (state.fat || '0') + ' g';
+
+    // Hide individual fields if they're 0 or empty
+    const calHasValue = state.cal && state.cal !== '0';
+    const proHasValue = state.pro && state.pro !== '0';
+    const carbHasValue = state.carb && state.carb !== '0';
+    const fatHasValue = state.fat && state.fat !== '0';
+
+    calEl.parentElement.style.display = calHasValue ? '' : 'none';
+    proEl.parentElement.style.display = proHasValue ? '' : 'none';
+    carbEl.parentElement.style.display = carbHasValue ? '' : 'none';
+    fatEl.parentElement.style.display = fatHasValue ? '' : 'none';
+
+    // Hide entire grid if all fields are empty
+    const hasAnyValue = calHasValue || proHasValue || carbHasValue || fatHasValue;
+    macrosGrid.style.display = hasAnyValue ? '' : 'none';
+
+    // Toggle between horizontal and vertical layout
+    if (state.macrosLayoutVertical) {
+      macrosGrid.className = 'grid grid-cols-1 gap-2 text-sm';
+    } else {
+      macrosGrid.className = 'grid grid-cols-2 gap-y-2 gap-x-8 text-sm';
+    }
+  } else {
+    macrosGrid.style.display = 'none';
+  }
+
+  // Dietary pills visibility
+  const dietPills = el('diet-pills');
+  dietPills.innerHTML = '';
+  if (state.showDietary) {
+    [['gf','GF'],['sf','SF'],['nf','NF'],['wf','WF']].forEach(([k,label]) => {
+      if (state.dietary[k]) {
+        const d = document.createElement('div');
+      d.className = 'pill text-sm';
+      d.textContent = label;
+      dietPills.appendChild(d);
+      }
+    });
+    dietPills.style.position = 'absolute';
+    dietPills.style.top = `${state.dietaryPosition}%`;
+    dietPills.style.left = '50%';
+    dietPills.style.transform = 'translateX(-50%)';
+    dietPills.style.width = '100%';
+    dietPills.style.display = '';
+  } else {
+    dietPills.style.display = 'none';
+  }
+
+  // Meal type pill visibility
+  const mealPill = el('meal-pill');
+  mealPill.innerHTML = '';
+  if (state.showMealType && state.mealType) {
+    const m = document.createElement('div');
+    m.className = 'pill text-sm font-bold text-center';
+    m.textContent = state.mealType;
+    mealPill.appendChild(m);
+    mealPill.style.position = 'absolute';
+    mealPill.style.top = `${state.mealTypePosition}%`;
+    mealPill.style.left = '50%';
+    mealPill.style.transform = 'translateX(-50%)';
+    mealPill.style.width = '100%';
+    mealPill.style.display = '';
+  } else {
+    mealPill.style.display = 'none';
+  }
+
+  document.querySelectorAll('.left-panel').forEach(panel => {
+    const hex = state.leftPanelColor;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    panel.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${state.leftPanelOpacity})`;
+    panel.style.color = state.leftPanelFontColor || '#ffffff';
+    panel.style.borderRadius = `${state.leftPanelBorderRadius}px`;
+
+    // Calculate and apply height based on page height
+    const pageHeight = 792; // Letter size height in pixels
+    const baseHeight = pageHeight - 40; // Minus page padding
+    const scaledHeight = baseHeight * (state.leftPanelHeight / 100);
+    panel.style.height = `${scaledHeight}px`;
+    panel.style.minHeight = '0'; // Override min-height from CSS
+
+    // Apply anchor positioning (left or right)
+    const anchor = state.leftPanelAnchor;
+    const parentCol = panel.closest('.col-span-5');
+    if (parentCol) {
+      if (anchor === 'right') {
+        // Position on the right side
+        parentCol.style.marginLeft = 'auto';
+        parentCol.style.marginRight = '0';
+      } else {
+        // Default to left
+        parentCol.style.marginLeft = '0';
+        parentCol.style.marginRight = 'auto';
+      }
+    }
+
+    // Apply scale via width/height instead of transform
+    const scale = state.leftPanelScale / 100;
+    const translateX = state.leftPanelX;
+    const translateY = state.leftPanelY;
+
+    // Calculate scaled dimensions based on grid column span (5/12 of page width)
+    const pageWidth = 612; // Letter size width in pixels
+    const baseWidth = (pageWidth - 40) * (5 / 12); // 5 columns out of 12, minus page padding
+    const scaledWidth = baseWidth * scale;
+
+    // Set width directly instead of using transform scale
+    panel.style.width = `${scaledWidth}px`;
+    panel.style.maxWidth = 'none';
+
+    // Apply only translation, no scale transform
+    panel.style.transform = `translate(${translateX}px, ${translateY}px)`;
+    panel.style.transformOrigin = 'top left';
+
+    if (state.leftPanelBorderEnabled && Number(state.leftPanelBorderWidth) > 0) {
+      panel.style.border = `${state.leftPanelBorderWidth}px solid ${state.leftPanelBorderColor}`;
+    } else {
+      panel.style.border = 'none';
+    }
+
+    // Find the parent grid container and adjust right panel
+    const gridContainer = panel.closest('.grid-cols-12');
+    if (gridContainer) {
+      const leftCol = panel.closest('.col-span-5');
+      const rightCol = gridContainer.querySelector('.col-span-7');
+
+      if (leftCol && rightCol) {
+        if (state.panelsLinked) {
+          // LINKED MODE: Right panel scales dynamically based on left panel
+          const baseRightWidth = (pageWidth - 40) * (7 / 12); // 7 columns out of 12
+          const rightScaledWidth = baseRightWidth * scale;
+
+          // Apply width scaling to right panel
+          rightCol.style.width = `${rightScaledWidth}px`;
+          rightCol.style.maxWidth = 'none';
+          rightCol.style.transform = 'none';
+          rightCol.style.marginLeft = '0';
+        } else {
+          // UNLINKED MODE: Right panel uses its own independent settings
+          const rightScale = state.rightPanelScale / 100;
+          const rightTranslateX = state.rightPanelX;
+          const rightTranslateY = state.rightPanelY;
+          const baseRightWidth = (pageWidth - 40) * (7 / 12);
+          const rightScaledWidth = baseRightWidth * rightScale;
+
+          rightCol.style.width = `${rightScaledWidth}px`;
+          rightCol.style.maxWidth = 'none';
+          rightCol.style.transform = `translate(${rightTranslateX}px, ${rightTranslateY}px)`;
+          rightCol.style.marginLeft = '0';
+        }
+      }
+    }
+  });
+
+  // Ingredients tables visibility
+  const tablesWrap = el('tables-preview');
+  tablesWrap.innerHTML = '';
+  if (state.showIngredients) {
+    const showTitles = el('show-table-titles')?.checked;
+
+    state.tables.forEach(t => {
+    const wrap = document.createElement('div');
+    if (showTitles && t.name) {
+      const h = document.createElement('div');
+      h.className = 'font-bold mb-1 text-lg';
+      h.textContent = t.name;
+      wrap.appendChild(h);
+    }
+    const table = document.createElement('table');
+    table.className = `ing-table w-full text-sm ${!state.showTableBorders ? 'no-borders' : ''}`;
+    table.style.opacity = state.tableOpacity / 100;
+
+    const tb = document.createElement('tbody');
+    t.rows.forEach((row, idx) => {
+      const tr = document.createElement('tr');
+      const isHeader = idx === 0;
+      const isAlternateRow = !isHeader && state.tableAlternatingRows && idx % 2 === 0;
+
+      row.forEach(cell => {
+        const cellEl = document.createElement(isHeader ? 'th' : 'td');
+
+        // Apply custom colors
+        if (isHeader) {
+          cellEl.style.backgroundColor = state.tableHeaderBgColor;
+          cellEl.style.color = state.tableHeaderTextColor;
+        } else if (isAlternateRow) {
+          cellEl.style.backgroundColor = state.tableAltRowBgColor;
+          cellEl.style.color = state.tableRowTextColor;
+        } else {
+          cellEl.style.backgroundColor = state.tableRowBgColor;
+          cellEl.style.color = state.tableRowTextColor;
+        }
+
+        cellEl.style.borderColor = state.tableBorderColor;
+
+        const contentEl = document.createElement('div');
+        contentEl.className = 'cell-content';
+        contentEl.textContent = cell || '';
+        cellEl.appendChild(contentEl);
+        tr.appendChild(cellEl);
+      });
+      tb.appendChild(tr);
+    });
+      table.appendChild(tb);
+      wrap.appendChild(table);
+      tablesWrap.appendChild(wrap);
+    });
+    tablesWrap.style.display = '';
+  } else {
+    tablesWrap.style.display = 'none';
+  }
+
+  // Logo visibility
+  const logoContainer = el('logo-container');
+  const logoImg = el('logo-img');
+  if (state.showLogo && state.logoURL) {
+    logoImg.src = state.logoURL;
+    logoImg.style.maxWidth = state.logoSize + 'px';
+    logoContainer.style.display = '';
+  } else {
+    logoContainer.style.display = 'none';
+  }
+
+
+
+
+  // Directions visibility and offset
+  const dirBlock = el('directions-block');
+  if (dirBlock) {
+    if (state.showDirections) {
+      let offset = state.stepsOffset;
+      if (state.stepsManualEnabled) {
+        // If we are exporting, apply an extra nudge upward
+        if (document.body.classList.contains('exporting')) {
+          offset -= 20; // tweak this number until the gap is gone
+        }
+        dirBlock.style.marginTop = `${offset}px`;
+      } else {
+        dirBlock.style.marginTop = '';
+      }
+      dirBlock.style.display = '';
+    } else {
+      dirBlock.style.display = 'none';
+    }
+  }
+
+
+
+
+  applyRowHeights();
+
+  renderPaginatedSteps();
+
+}
+
+
+// ==================
+// Inputs wiring
+// ==================
+el('title')?.addEventListener('input', e => { state.title = e.target.value; refreshPreview(); });
+el('title-color')?.addEventListener('input', e => { state.titleColor = e.target.value; refreshPreview(); });
+el('pad-left')?.addEventListener('input', e => { state.padLeft = parseInt(e.target.value || '0', 10); refreshPreview(); });
+el('pad-right')?.addEventListener('input', e => { state.padRight = parseInt(e.target.value || '0', 10); refreshPreview(); });
+
+el('recipe-img')?.addEventListener('change', async e => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  state.recipeImageURL = await readFileToDataURL(f);
+  el('img-name').textContent = f.name;
+  refreshPreview();
+});
+el('clear-img')?.addEventListener('click', () => {
+  state.recipeImageURL = '';
+  el('img-name').textContent = 'No image';
+  refreshPreview();
+});
+
+// Image shape controls
+document.querySelectorAll('input[name="img-shape"]').forEach(radio => {
+  radio.addEventListener('change', e => {
+    state.recipeImageShape = e.target.value;
+    const borderRadiusControl = el('border-radius-control');
+    borderRadiusControl.style.display = e.target.value === 'rounded' ? '' : 'none';
+    refreshPreview();
+  });
+});
+
+// Image border radius
+el('img-border-radius')?.addEventListener('input', e => {
+  state.recipeImageBorderRadius = parseInt(e.target.value);
+  el('img-border-radius-value').textContent = e.target.value + 'px';
+  refreshPreview();
+});
+
+// Image zoom
+el('img-zoom')?.addEventListener('input', e => {
+  state.recipeImageZoom = parseInt(e.target.value);
+  el('img-zoom-value').textContent = e.target.value + '%';
+  refreshPreview();
+});
+
+// Image position X
+el('img-position-x')?.addEventListener('input', e => {
+  state.recipeImageX = parseInt(e.target.value);
+  el('img-position-x-value').textContent = e.target.value + '%';
+  refreshPreview();
+});
+
+// Image position Y
+el('img-position-y')?.addEventListener('input', e => {
+  state.recipeImageY = parseInt(e.target.value);
+  el('img-position-y-value').textContent = e.target.value + '%';
+  refreshPreview();
+});
+
+// Reset image controls
+el('reset-img-controls')?.addEventListener('click', () => {
+  state.recipeImageZoom = 100;
+  state.recipeImageX = 50;
+  state.recipeImageY = 50;
+  state.recipeImageShape = 'rectangle';
+  state.recipeImageBorderRadius = 0;
+
+  el('img-zoom').value = 100;
+  el('img-zoom-value').textContent = '100%';
+  el('img-position-x').value = 50;
+  el('img-position-x-value').textContent = '50%';
+  el('img-position-y').value = 50;
+  el('img-position-y-value').textContent = '50%';
+  el('img-border-radius').value = 0;
+  el('img-border-radius-value').textContent = '0px';
+  document.querySelector('input[name="img-shape"][value="rectangle"]').checked = true;
+  el('border-radius-control').style.display = 'none';
+
+  refreshPreview();
+});
+
+el('logo-upload')?.addEventListener('change', async e => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  state.logoURL = await readFileToDataURL(f);
+  el('logo-name').textContent = f.name;
+  refreshPreview();
+});
+el('clear-logo')?.addEventListener('click', () => {
+  state.logoURL = '';
+  el('logo-name').textContent = 'No logo';
+  refreshPreview();
+});
+
+el('logo-size')?.addEventListener('input', e => {
+  state.logoSize = parseInt(e.target.value, 10);
+  el('logo-size-value').textContent = state.logoSize + 'px';
+  refreshPreview();
+});
+
+el('reset-logo-size')?.addEventListener('click', () => {
+  state.logoSize = 200;
+  el('logo-size').value = 200;
+  el('logo-size-value').textContent = '200px';
+  refreshPreview();
+});
+
+// Table styling controls
+el('table-alternating')?.addEventListener('change', e => {
+  state.tableAlternatingRows = e.target.checked;
+  refreshPreview();
+});
+
+el('table-header-bg')?.addEventListener('input', e => {
+  state.tableHeaderBgColor = e.target.value;
+  refreshPreview();
+});
+
+el('table-header-text')?.addEventListener('input', e => {
+  state.tableHeaderTextColor = e.target.value;
+  refreshPreview();
+});
+
+el('table-row-bg')?.addEventListener('input', e => {
+  state.tableRowBgColor = e.target.value;
+  refreshPreview();
+});
+
+el('table-row-text')?.addEventListener('input', e => {
+  state.tableRowTextColor = e.target.value;
+  refreshPreview();
+});
+
+el('table-alt-row-bg')?.addEventListener('input', e => {
+  state.tableAltRowBgColor = e.target.value;
+  refreshPreview();
+});
+
+el('table-border-color')?.addEventListener('input', e => {
+  state.tableBorderColor = e.target.value;
+  refreshPreview();
+});
+
+el('table-opacity')?.addEventListener('input', e => {
+  state.tableOpacity = parseInt(e.target.value);
+  el('table-opacity-value').textContent = e.target.value + '%';
+  refreshPreview();
+});
+
+el('table-opacity-manual')?.addEventListener('input', e => {
+  const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+  state.tableOpacity = val;
+  el('table-opacity').value = val;
+  el('table-opacity-value').textContent = val + '%';
+  refreshPreview();
+});
+
+el('reset-table-colors')?.addEventListener('click', () => {
+  state.tableHeaderBgColor = '#111111';
+  state.tableHeaderTextColor = '#ffffff';
+  state.tableRowBgColor = '#ffffff';
+  state.tableRowTextColor = '#111111';
+  state.tableAltRowBgColor = '#f1f5f9';
+  state.tableBorderColor = '#111111';
+  state.tableOpacity = 100;
+
+  el('table-header-bg').value = '#111111';
+  el('table-header-text').value = '#ffffff';
+  el('table-row-bg').value = '#ffffff';
+  el('table-row-text').value = '#111111';
+  el('table-alt-row-bg').value = '#f1f5f9';
+  el('table-border-color').value = '#111111';
+  el('table-opacity').value = 100;
+  el('table-opacity-manual').value = 100;
+  el('table-opacity-value').textContent = '100%';
+
+  refreshPreview();
+});
+
+document.querySelectorAll('input[name="meal"]').forEach(r =>
+  r.addEventListener('change', e => { state.mealType = e.target.value; refreshPreview(); })
+);
+el('gf')?.addEventListener('change', e => { state.dietary.gf = e.target.checked; refreshPreview(); });
+el('sf')?.addEventListener('change', e => { state.dietary.sf = e.target.checked; refreshPreview(); });
+el('nf')?.addEventListener('change', e => { state.dietary.nf = e.target.checked; refreshPreview(); });
+el('wf')?.addEventListener('change', e => { state.dietary.wf = e.target.checked; refreshPreview(); });
+
+el('serves')?.addEventListener('input', e => { state.serves = e.target.value; refreshPreview(); });
+el('prep')?.addEventListener('input',   e => { state.prep   = e.target.value; refreshPreview(); });
+el('cook')?.addEventListener('input',   e => { state.cook   = e.target.value; refreshPreview(); });
+el('cal')?.addEventListener('input',    e => { state.cal    = e.target.value; refreshPreview(); });
+el('pro')?.addEventListener('input',    e => { state.pro    = e.target.value; refreshPreview(); });
+el('carb')?.addEventListener('input',   e => { state.carb   = e.target.value; refreshPreview(); });
+el('fat')?.addEventListener('input',    e => { state.fat    = e.target.value; refreshPreview(); });
+
+
+// ==================
+// Text Sections UI
+// ==================
+function renderTextSections() {
+  const wrap = el('text-sections'); if (!wrap) return;
+  wrap.innerHTML = '';
+  state.textSections.forEach((sec, idx) => {
+    const row = document.createElement('div');
+    row.className = 'bg-slate-800 rounded p-2 grid grid-cols-1 gap-2';
+    row.innerHTML = `
+      <div class="flex gap-2 items-center">
+        <input class="flex-1 px-2 py-1 rounded bg-slate-900" placeholder="Section Title" value="${sec.title || ''}" />
+        <button class="px-2 py-1 bg-slate-700 rounded">Delete</button>
+      </div>
+      <input class="px-2 py-1 rounded bg-slate-900" placeholder="Section text" value="${sec.text || ''}" />
+    `;
+    const [titleIn, delBtn, textIn] = [row.children[0].children[0], row.children[0].children[1], row.children[1]];
+    titleIn.addEventListener('input', e => { sec.title = e.target.value; refreshPreview(); });
+    textIn.addEventListener('input',  e => { sec.text  = e.target.value; refreshPreview(); });
+    delBtn.addEventListener('click', () => { state.textSections.splice(idx, 1); renderTextSections(); refreshPreview(); });
+    wrap.appendChild(row);
+  });
+}
+el('add-text')?.addEventListener('click', () => { state.textSections.push({ title: '', text: '' }); renderTextSections(); refreshPreview(); });
+
+
+// ==============
+// Tables UI
+// ==============
+function renderTables() {
+  const wrap = el('tables'); if (!wrap) return;
+  wrap.innerHTML = '';
+
+  state.tables.forEach((t, tIdx) => {
+    const cont = document.createElement('div');
+    cont.className = 'bg-slate-800 rounded p-3 space-y-3';
+
+    cont.innerHTML = `
+      <div class="flex items-center gap-2 flex-wrap">
+        <input class="flex-1 min-w-32 px-2 py-1 rounded bg-slate-900" placeholder="Table Name" value="${t.name || ''}" />
+        <button class="px-2 py-1 bg-slate-700 rounded delete-table">Delete Table</button>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div class="flex items-center gap-2">
+          <label class="text-sm">Rows:</label>
+          <input type="number" min="1" max="20" value="${t.rows.length}" class="w-16 px-2 py-1 rounded bg-slate-900 text-sm rows-input" />
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-sm">Cols:</label>
+          <input type="number" min="1" max="10" value="${t.rows[0]?.length || 3}" class="w-16 px-2 py-1 rounded bg-slate-900 text-sm cols-input" />
+        </div>
+        <button class="px-2 py-1 bg-emerald-600 rounded text-sm apply-size">Apply Size</button>
+        <button class="px-2 py-1 bg-blue-600 rounded text-sm add-row">Add Row</button>
+      </div>
+      <div class="flex gap-2">
+        <textarea class="flex-1 px-2 py-1 rounded bg-slate-900 text-sm" rows="2" placeholder="Paste data with semicolons...">${t.paste || ''}</textarea>
+        <button class="px-2 py-1 bg-slate-700 rounded fill-table">Fill Table</button>
+      </div>
+      <div class="overflow-auto max-h-64">
+        <table class="w-full text-sm border-collapse">
+          <tbody class="table-body"></tbody>
+        </table>
+      </div>
+    `;
+
+    const nameInput = cont.querySelector('input[placeholder="Table Name"]');
+    const deleteBtn = cont.querySelector('.delete-table');
+    const rowsInput = cont.querySelector('.rows-input');
+    const colsInput = cont.querySelector('.cols-input');
+    const applySizeBtn = cont.querySelector('.apply-size');
+    const addRowBtn = cont.querySelector('.add-row');
+    const pasteTA = cont.querySelector('textarea');
+    const fillBtn = cont.querySelector('.fill-table');
+    const tbody = cont.querySelector('.table-body');
+
+    function drawTable() {
+      tbody.innerHTML = '';
+      t.rows.forEach((row, rIdx) => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, cIdx) => {
+          const td = document.createElement('td');
+          td.className = 'border border-slate-600 p-1';
+          const input = document.createElement('input');
+          input.className = 'w-full px-1 py-1 rounded bg-slate-900 text-xs';
+          input.value = cell || '';
+          input.addEventListener('input', e => {
+            t.rows[rIdx][cIdx] = e.target.value;
+            refreshPreview();
+          });
+          td.appendChild(input);
+          tr.appendChild(td);
+        });
+
+        const deleteTd = document.createElement('td');
+        deleteTd.className = 'border border-slate-600 p-1';
+        const deleteRowBtn = document.createElement('button');
+        deleteRowBtn.className = 'px-1 py-1 bg-red-600 rounded text-xs';
+        deleteRowBtn.textContent = '×';
+        deleteRowBtn.addEventListener('click', () => {
+          if (t.rows.length > 1) {
+            t.rows.splice(rIdx, 1);
+            drawTable();
+            refreshPreview();
+          }
+        });
+        deleteTd.appendChild(deleteRowBtn);
+        tr.appendChild(deleteTd);
+        tbody.appendChild(tr);
+      });
+    }
+
+    nameInput.addEventListener('input', e => {
+      t.name = e.target.value;
+      refreshPreview();
+    });
+
+    deleteBtn.addEventListener('click', () => {
+      state.tables.splice(tIdx, 1);
+      renderTables();
+      refreshPreview();
+    });
+
+    applySizeBtn.addEventListener('click', () => {
+      const newRows = parseInt(rowsInput.value, 10) || 1;
+      const newCols = parseInt(colsInput.value, 10) || 3;
+
+      while (t.rows.length < newRows) t.rows.push(new Array(newCols).fill(''));
+      while (t.rows.length > newRows) t.rows.pop();
+
+      t.rows.forEach(row => {
+        while (row.length < newCols) row.push('');
+        while (row.length > newCols) row.pop();
+      });
+
+      drawTable();
+      refreshPreview();
+    });
+
+    addRowBtn.addEventListener('click', () => {
+      const cols = t.rows[0]?.length || 3;
+      t.rows.push(new Array(cols).fill(''));
+      rowsInput.value = t.rows.length;
+      drawTable();
+      refreshPreview();
+    });
+
+    fillBtn.addEventListener('click', () => {
+      const raw = pasteTA.value.trim();
+      t.paste = raw;
+      if (!raw) return;
+
+      const items = raw.split(';').map(s => s.trim());
+      const cols = Math.max(1, (t.rows[0]?.length) || 3);
+      const rowsNeeded = Math.ceil(items.length / cols);
+
+      t.rows = Array.from({ length: rowsNeeded }, (_, r) =>
+        Array.from({ length: cols }, (_, c) => items[r * cols + c] || '')
+      );
+
+      rowsInput.value = t.rows.length;
+      drawTable();
+      refreshPreview();
+    });
+
+    drawTable();
+    wrap.appendChild(cont);
+  });
+}
+
+el('add-table')?.addEventListener('click', () => {
+  state.tables.push({
+    name: `Ingredients ${state.tables.length + 1}`,
+    rows: [['Ingredients', 'Amount', 'Notes'], ['', '', '']],
+    paste: ''
+  });
+  renderTables();
+  refreshPreview();
+});
+el('show-table-titles')?.addEventListener('change', refreshPreview);
+
+
+// ==============
+// Steps UI
+// ==============
+function renderSteps() {
+  const wrap = el('steps'); if (!wrap) return;
+  wrap.innerHTML = '';
+  state.steps.forEach((s, idx) => {
+    const row = document.createElement('div');
+    row.className = 'flex items-start gap-2';
+    row.innerHTML = `<div class="pt-2 text-sm w-6 text-right">${idx + 1}.</div><textarea class="flex-1 px-2 py-1 rounded bg-slate-800" rows="3">${s}</textarea><button class="px-2 py-1 bg-slate-700 rounded">-</button>`;
+    const ta  = row.children[1];
+    const del = row.children[2];
+    ta.addEventListener('input', e => { state.steps[idx] = e.target.value; refreshPreview(); });
+    del.addEventListener('click', () => { state.steps.splice(idx, 1); renderSteps(); refreshPreview(); });
+    wrap.appendChild(row);
+  });
+}
+el('add-step')?.addEventListener('click', () => { state.steps.push(''); renderSteps(); refreshPreview(); });
+el('fill-steps')?.addEventListener('click', () => {
+  const raw = el('paste-steps').value.trim();
+  if (!raw) return;
+  state.steps = raw.split(';').map(s => s.trim()).filter(Boolean);
+  renderSteps();
+  refreshPreview();
+});
+
+// All Directions on Page 2 Toggle
+el('all-directions-page2')?.addEventListener('change', e => {
+  state.allDirectionsOnPage2 = e.target.checked;
+  refreshPreview();
+});
+
+// ==============
+// Directions Positioning Controls
+// ==============
+const stepsManualEnabled = el('steps-manual-enabled');
+const stepsOffsetSlider  = el('steps-offset');
+const stepsOffsetManual  = el('steps-offset-manual');
+const stepsOffsetValue   = el('steps-offset-value');
+
+if (stepsManualEnabled && stepsOffsetSlider && stepsOffsetManual && stepsOffsetValue) {
+  // initialize UI from state
+  stepsManualEnabled.checked = !!state.stepsManualEnabled;
+  stepsOffsetSlider.value    = String(state.stepsOffset);
+  stepsOffsetManual.value    = String(state.stepsOffset);
+  stepsOffsetValue.textContent = `${state.stepsOffset} px`;
+
+  const setStepsOffset = (v) => {
+    const n = Math.max(-200, Math.min(600, parseInt(v || '0', 10)));
+    state.stepsOffset = isNaN(n) ? 0 : n;
+    stepsOffsetSlider.value   = String(state.stepsOffset);
+    stepsOffsetManual.value   = String(state.stepsOffset);
+    stepsOffsetValue.textContent = `${state.stepsOffset} px`;
+    refreshPreview();
+  };
+
+  stepsManualEnabled.addEventListener('change', e => {
+    state.stepsManualEnabled = e.target.checked;
+    stepsOffsetSlider.disabled = !state.stepsManualEnabled;
+    stepsOffsetManual.disabled = !state.stepsManualEnabled;
+    refreshPreview();
+  });
+
+  stepsOffsetSlider.addEventListener('input', e => setStepsOffset(e.target.value));
+  stepsOffsetManual.addEventListener('input', e => setStepsOffset(e.target.value));
+
+  // reflect initial disabled state
+  stepsOffsetSlider.disabled = !state.stepsManualEnabled;
+  stepsOffsetManual.disabled = !state.stepsManualEnabled;
+}
+
+// ==============
+// Templates I/O
+// ==============
+el('tpl1')?.addEventListener('change', async e => {
+  const f = e.target.files?.[0]; if (!f) return;
+  state.tpl1URL = await readFileToDataURL(f);
+  el('tpl1-name').textContent = f.name;
+  refreshPreview();
+});
+el('tpl2')?.addEventListener('change', async e => {
+  const f = e.target.files?.[0]; if (!f) return;
+  state.tpl2URL = await readFileToDataURL(f);
+  el('tpl2-name').textContent = f.name;
+  refreshPreview();
+});
+
+function getRecipeJSON() {
+  return JSON.stringify({
+    show_table_borders: state.showTableBorders,
+    dietary_position: state.dietaryPosition,
+    meal_type_background_color: state.mealTypeBackgroundColor,
+    meal_type_text_color: state.mealTypeTextColor,
+    left_panel_opacity: state.leftPanelOpacity,
+    info_macro_gap: state.infoMacroGap,
+    title: state.title,
+    left_panel_font_color: state.leftPanelFontColor,
+    title_color: state.titleColor,
+    serves: state.serves,
+    prep_time: state.prep,
+    cook_time: state.cook,
+    protein: state.pro,
+    fat: state.fat,
+    carbs: state.carb,
+    calories: state.cal,
+    template_path: state.tpl1URL || null,
+    template_path_2: state.tpl2URL || null,
+    recipe_image_path: state.recipeImageURL || null,
+    recipe_image_zoom: state.recipeImageZoom,
+    recipe_image_x: state.recipeImageX,
+    recipe_image_y: state.recipeImageY,
+    recipe_image_shape: state.recipeImageShape,
+    recipe_image_border_radius: state.recipeImageBorderRadius,
+    logo_url: state.logoURL || null,
+    logo_size: state.logoSize,
+    meal_type: state.mealType,
+    dietary_indicators: state.dietary,
+    extra_text_sections: state.textSections,
+    directions: state.steps,
+    tables: state.tables.map(t => ({
+      name: t.name,
+      rows: t.rows.length,
+      cols: t.rows[0]?.length || 0,
+      data: t.rows
+    })),
+    left_panel_color: state.leftPanelColor,
+    left_panel_border_enabled: state.leftPanelBorderEnabled,
+    left_panel_border_color: state.leftPanelBorderColor,
+    left_panel_border_width: state.leftPanelBorderWidth,
+    left_panel_border_radius: state.leftPanelBorderRadius,
+    table_alternating_rows: state.tableAlternatingRows,
+    table_header_bg_color: state.tableHeaderBgColor,
+    table_header_text_color: state.tableHeaderTextColor,
+    table_row_bg_color: state.tableRowBgColor,
+    table_row_text_color: state.tableRowTextColor,
+    table_alt_row_bg_color: state.tableAltRowBgColor,
+    table_border_color: state.tableBorderColor,
+    table_opacity: state.tableOpacity,
+    left_panel_scale: state.leftPanelScale,
+    left_panel_x: state.leftPanelX,
+    left_panel_y: state.leftPanelY,
+    left_panel_height: state.leftPanelHeight,
+    left_panel_anchor: state.leftPanelAnchor,
+    right_panel_scale: state.rightPanelScale,
+    right_panel_x: state.rightPanelX,
+    right_panel_y: state.rightPanelY,
+    panels_linked: state.panelsLinked,
+    show_title: state.showTitle,
+    show_recipe_image: state.showRecipeImage,
+    show_logo: state.showLogo,
+    show_meal_type: state.showMealType,
+    show_dietary: state.showDietary,
+    show_info_section: state.showInfoSection,
+    info_layout_vertical: state.infoLayoutVertical,
+    show_macros: state.showMacros,
+    macros_layout_vertical: state.macrosLayoutVertical,
+    show_ingredients: state.showIngredients,
+    show_directions: state.showDirections,
+    show_text_sections: state.showTextSections,
+    steps_manual_enabled: state.stepsManualEnabled,
+    steps_offset: state.stepsOffset,
+    all_directions_on_page2: state.allDirectionsOnPage2
+
+
+
+
+  }, null, 2);
+}
+
+el('btn-save')?.addEventListener('click', () => {
+  const blob = new Blob([getRecipeJSON()], { type: 'application/json' });
+  const a = document.createElement('a');
+  const title = state.title?.trim() || 'Recipe';
+  const safe = title.replace(/[^a-z0-9_\- ]/gi, '_');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${safe}.recipe`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+
+el('btn-open')?.addEventListener('click', () => el('open-file').click());
+el('open-file')?.addEventListener('change', async e => {
+  const f = e.target.files?.[0]; if (!f) return;
+  const text = await f.text();
+  try {
+    const data = JSON.parse(text);
+    state.title = data.title || '';
+    state.titleColor = data.title_color || '#ffffff';
+    el('title-color').value = state.titleColor;
+    state.dietaryPosition = typeof data.dietary_position === 'number' ? data.dietary_position : 90;
+    state.serves = data.serves || '';
+    state.prep = data.prep_time || '';
+    state.cook = data.cook_time || '';
+    state.pro  = data.protein || '';
+    state.fat  = data.fat || '';
+    state.carb = data.carbs || '';
+    state.cal  = data.calories || '';
+    state.mealTypeBackgroundColor = data.meal_type_background_color || '#ffffff';
+    state.mealTypeTextColor = data.meal_type_text_color || '#0f172a';
+    state.mealType = data.meal_type || '';
+    state.dietary = data.dietary_indicators || { gf: false, sf: false, nf: false, wf: false };
+    state.textSections = data.extra_text_sections || [];
+    state.steps = data.directions || [];
+    state.tables = (data.tables || []).map(t => ({ name: t.name, rows: t.data || [[]] }));
+    state.recipeImageURL = data.recipe_image_path || '';
+    state.recipeImageZoom = typeof data.recipe_image_zoom === 'number' ? data.recipe_image_zoom : 100;
+    state.recipeImageX = typeof data.recipe_image_x === 'number' ? data.recipe_image_x : 50;
+    state.recipeImageY = typeof data.recipe_image_y === 'number' ? data.recipe_image_y : 50;
+    state.recipeImageShape = data.recipe_image_shape || 'rectangle';
+    state.recipeImageBorderRadius = typeof data.recipe_image_border_radius === 'number' ? data.recipe_image_border_radius : 0;
+    state.logoURL = data.logo_url || '';
+    state.logoSize = typeof data.logo_size === 'number' ? data.logo_size : 200;
+    state.tpl1URL = data.template_path || '';
+    state.tpl2URL = data.template_path_2 || '';
+    state.leftPanelColor = data.left_panel_color || '#0d1b2a';
+    state.leftPanelFontColor = data.left_panel_font_color || '#ffffff';
+    state.leftPanelBorderEnabled = !!data.left_panel_border_enabled;
+    state.leftPanelBorderColor = data.left_panel_border_color || '#ffffff';
+    state.leftPanelBorderWidth = typeof data.left_panel_border_width === 'number' ? data.left_panel_border_width : 2;
+    state.leftPanelBorderRadius = typeof data.left_panel_border_radius === 'number' ? data.left_panel_border_radius : 6;
+    state.tableAlternatingRows = !!data.table_alternating_rows;
+    state.tableHeaderBgColor = data.table_header_bg_color || '#111111';
+    state.tableHeaderTextColor = data.table_header_text_color || '#ffffff';
+    state.tableRowBgColor = data.table_row_bg_color || '#ffffff';
+    state.tableRowTextColor = data.table_row_text_color || '#111111';
+    state.tableAltRowBgColor = data.table_alt_row_bg_color || '#f1f5f9';
+    state.tableBorderColor = data.table_border_color || '#111111';
+    state.tableOpacity = typeof data.table_opacity === 'number' ? data.table_opacity : 100;
+    state.leftPanelScale = typeof data.left_panel_scale === 'number' ? data.left_panel_scale : 100;
+    state.leftPanelX = typeof data.left_panel_x === 'number' ? data.left_panel_x : 0;
+    state.leftPanelY = typeof data.left_panel_y === 'number' ? data.left_panel_y : 0;
+    state.leftPanelHeight = typeof data.left_panel_height === 'number' ? data.left_panel_height : 100;
+    state.leftPanelAnchor = data.left_panel_anchor || 'top';
+    state.rightPanelScale = typeof data.right_panel_scale === 'number' ? data.right_panel_scale : 100;
+    state.rightPanelX = typeof data.right_panel_x === 'number' ? data.right_panel_x : 0;
+    state.rightPanelY = typeof data.right_panel_y === 'number' ? data.right_panel_y : 0;
+    state.panelsLinked = data.panels_linked !== false;
+    state.showTitle = data.show_title !== false;
+    state.showRecipeImage = data.show_recipe_image !== false;
+    state.showLogo = !!data.show_logo;
+    state.showMealType = data.show_meal_type !== false;
+    state.showDietary = data.show_dietary !== false;
+    state.showInfoSection = data.show_info_section !== false;
+    state.infoLayoutVertical = !!data.info_layout_vertical;
+    state.showMacros = data.show_macros !== false;
+    state.macrosLayoutVertical = !!data.macros_layout_vertical;
+    state.showIngredients = data.show_ingredients !== false;
+    state.showDirections = data.show_directions !== false;
+    state.showTextSections = data.show_text_sections !== false;
+    state.leftPanelOpacity = typeof data.left_panel_opacity === 'number' ? data.left_panel_opacity : 1;
+    state.showTableBorders = data.show_table_borders !== false;
+    state.stepsManualEnabled = !!data.steps_manual_enabled;
+    state.stepsOffset = (typeof data.steps_offset === 'number') ? data.steps_offset : 0;
+    state.allDirectionsOnPage2 = !!data.all_directions_on_page2;
+
+    // Sync the UI controls if they exist
+    const sm = el('steps-manual-enabled');
+    const so = el('steps-offset');
+    const som = el('steps-offset-manual');
+    const sov = el('steps-offset-value');
+    const allDirPage2 = el('all-directions-page2');
+
+    if (sm) sm.checked = state.stepsManualEnabled;
+    if (so && som && sov) {
+      so.value = String(state.stepsOffset);
+      som.value = String(state.stepsOffset);
+      sov.textContent = `${state.stepsOffset} px`;
+      so.disabled = !state.stepsManualEnabled;
+      som.disabled = !state.stepsManualEnabled;
+    }
+    if (allDirPage2) allDirPage2.checked = state.allDirectionsOnPage2;
+
+    // reflect to UI when present
+    if (leftBgColor)     leftBgColor.value = state.leftPanelColor;
+    if (leftFontColor)   leftFontColor.value = state.leftPanelFontColor;
+    if (leftBorderColor) leftBorderColor.value = state.leftPanelBorderColor;
+    if (borderEnabled)   borderEnabled.checked = state.leftPanelBorderEnabled;
+    setBorderWidth(state.leftPanelBorderWidth);
+    setBorderRadius(state.leftPanelBorderRadius);
+    setPanelScale(state.leftPanelScale);
+    setPanelX(state.leftPanelX);
+    setPanelY(state.leftPanelY);
+    setPanelHeight(state.leftPanelHeight);
+    document.querySelectorAll('input[name="panel-anchor"]').forEach(r => r.checked = (r.value === state.leftPanelAnchor));
+    setRightPanelScale(state.rightPanelScale);
+    setRightPanelX(state.rightPanelX);
+    setRightPanelY(state.rightPanelY);
+
+    // Update link toggle and control states
+    if (linkPanels) {
+      linkPanels.checked = state.panelsLinked;
+      const rightControls = [
+        el('right-panel-scale'), el('right-panel-scale-manual'),
+        el('right-panel-x'), el('right-panel-x-manual'),
+        el('right-panel-y'), el('right-panel-y-manual')
+      ];
+      rightControls.forEach(ctrl => {
+        if (ctrl) ctrl.disabled = state.panelsLinked;
+      });
+    }
+
+    // Update visibility toggles
+    Object.entries(visibilityToggles).forEach(([id, stateKey]) => {
+      const toggle = el(id);
+      if (toggle) toggle.checked = state[stateKey];
+    });
+
+    // Update info layout toggle
+    const infoLayoutToggle = el('info-layout-vertical');
+    if (infoLayoutToggle) infoLayoutToggle.checked = state.infoLayoutVertical;
+
+    // Update macros layout toggle
+    const macrosLayoutToggle = el('macros-layout-vertical');
+    if (macrosLayoutToggle) macrosLayoutToggle.checked = state.macrosLayoutVertical;
+
+    // Update logo size
+    const logoSizeSlider = el('logo-size');
+    const logoSizeValue = el('logo-size-value');
+    if (logoSizeSlider) logoSizeSlider.value = state.logoSize;
+    if (logoSizeValue) logoSizeValue.textContent = state.logoSize + 'px';
+
+    if (opacitySlider && opacityManual && opacityValue) {
+      opacitySlider.value = state.leftPanelOpacity;
+      opacityManual.value = state.leftPanelOpacity;
+      opacityValue.textContent = `${Math.round(state.leftPanelOpacity * 100)}%`;
+    }
+
+    el('title').value = state.title;
+    el('serves').value = state.serves;
+    el('prep').value   = state.prep;
+    el('cook').value   = state.cook;
+    el('cal').value    = state.cal;
+    el('pro').value    = state.pro;
+    el('carb').value   = state.carb;
+    el('fat').value    = state.fat;
+    document.querySelectorAll('input[name="meal"]').forEach(r => r.checked = (r.value === state.mealType));
+    el('gf').checked = !!state.dietary.gf;
+    el('sf').checked = !!state.dietary.sf;
+    el('nf').checked = !!state.dietary.nf;
+    el('wf').checked = !!state.dietary.wf;
+    el('img-name').textContent = state.recipeImageURL ? 'Image loaded' : 'No image';
+    el('logo-name').textContent = state.logoURL ? 'Logo loaded' : 'No logo';
+    el('tpl1-name').textContent = state.tpl1URL ? 'Template 1 loaded' : 'No template';
+    el('tpl2-name').textContent = state.tpl2URL ? 'Optional' : 'Optional';
+
+    // Update image adjustment controls
+    el('img-zoom').value = state.recipeImageZoom;
+    el('img-zoom-value').textContent = state.recipeImageZoom + '%';
+    el('img-position-x').value = state.recipeImageX;
+    el('img-position-x-value').textContent = state.recipeImageX + '%';
+    el('img-position-y').value = state.recipeImageY;
+    el('img-position-y-value').textContent = state.recipeImageY + '%';
+    el('img-border-radius').value = state.recipeImageBorderRadius;
+    el('img-border-radius-value').textContent = state.recipeImageBorderRadius + 'px';
+    document.querySelectorAll('input[name="img-shape"]').forEach(r => r.checked = (r.value === state.recipeImageShape));
+    el('border-radius-control').style.display = state.recipeImageShape === 'rounded' ? '' : 'none';
+
+    // Update table styling controls
+    el('table-alternating').checked = state.tableAlternatingRows;
+    el('table-header-bg').value = state.tableHeaderBgColor;
+    el('table-header-text').value = state.tableHeaderTextColor;
+    el('table-row-bg').value = state.tableRowBgColor;
+    el('table-row-text').value = state.tableRowTextColor;
+    el('table-alt-row-bg').value = state.tableAltRowBgColor;
+    el('table-border-color').value = state.tableBorderColor;
+    el('table-opacity').value = state.tableOpacity;
+    el('table-opacity-manual').value = state.tableOpacity;
+    el('table-opacity-value').textContent = state.tableOpacity + '%';
+
+    renderTextSections();
+    renderTables();
+    renderSteps();
+    refreshPreview();
+  } catch (err) {
+    alert('Failed to open .recipe file');
+  }
+});
+
+
+/**
+ * Export the current preview to a real Letter PDF.
+ * Uses the same font-loading and style-inlining approach as JPEG export
+ * to ensure the PDF looks identical to the preview.
+ */
+el('btn-export-pdf')?.addEventListener('click', async () => {
+  refreshPreview();
+
+  // Wait for all fonts to fully load before exporting
+  await document.fonts.ready;
+
+  // Capture state
+  document.body.classList.add('exporting');
+  refreshPreview();  // reflow with export CSS
+  const section = el('preview-section');
+
+  const prevPosition = section.style.position;
+  section.style.position = 'static';
+
+  const pages = [el('page1')];
+  const hasPage2 = !el('page2').classList.contains('hidden');
+  if (hasPage2) pages.push(el('page2'));
+
+  // Ensure all <img> tags use CORS (safe for data URLs, too)
+  pages.forEach(p => p.querySelectorAll('img').forEach(img => img.crossOrigin = 'anonymous'));
+
+  // Wait a frame so styles/DOM updates settle
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  // Preload all images (including background templates)
+  const urls = collectImageUrls(pages);
+  try { await preloadUrls(urls); } catch (e) {
+    console.warn('Some images failed to preload:', e);
+    // keep going; html2canvas will skip failed ones if allowTaint=false
+  }
+
+  const baseName = (state.title?.trim() || 'Recipe').replace(/[^a-z0-9_\- ]/gi, '_');
+
+  try {
+    // Get dimensions from the first page (all pages should be the same size)
+    const firstPage = pages[0];
+    inlineAllStyles(firstPage);
+    const rect = firstPage.getBoundingClientRect();
+
+    // Create PDF with exact dimensions to match preview
+    const pdf = new jspdf.jsPDF({
+      orientation: rect.height > rect.width ? 'portrait' : 'landscape',
+      unit: 'px',
+      format: [rect.width, rect.height]
+    });
+
+    for (let i = 0; i < pages.length; i++) {
+      const node = pages[i];
+
+      // Inline all computed styles to ensure exact match with preview
+      inlineAllStyles(node);
+
+      // Get the actual dimensions from the preview
+      const pageRect = node.getBoundingClientRect();
+
+      const canvas = await html2canvas(node, {
+        scale: window.devicePixelRatio,  // Match device pixel ratio for exact rendering
+        width: pageRect.width,
+        height: pageRect.height,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        imageTimeout: 20000,
+        removeContainer: true
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      // Add a new page for subsequent pages
+      if (i > 0) {
+        pdf.addPage([pageRect.width, pageRect.height]);
+      }
+
+      // Add image to PDF with exact dimensions
+      pdf.addImage(imgData, 'PNG', 0, 0, pageRect.width, pageRect.height);
+    }
+
+    pdf.save(`${baseName}.pdf`);
+
+  } catch (err) {
+    console.error('PDF export error:', err);
+    alert('PDF export failed. This usually means a remote image blocked CORS or the browser aborted the canvas.\n' +
+          'Try uploading images (data URLs) or hosting them with CORS enabled, then export again.');
+  } finally {
+    document.body.classList.remove('exporting');
+    refreshPreview();  // restore normal layout
+    section.style.position = prevPosition || '';
+  }
+});
+
+
+// ==================
+// Export to JPEG
+// ==================
+// ---------- helpers ----------
+/**
+ * Inline all computed CSS styles so the export renderer captures them correctly.
+ * This ensures fonts, spacing, and all styling match the preview exactly.
+ */
+function inlineAllStyles(element) {
+  const elements = element.querySelectorAll('*');
+  elements.forEach(el => {
+    const computed = getComputedStyle(el);
+    for (let prop of computed) {
+      el.style[prop] = computed.getPropertyValue(prop);
+    }
+  });
+  // Also inline styles on the root element itself
+  const computed = getComputedStyle(element);
+  for (let prop of computed) {
+    element.style[prop] = computed.getPropertyValue(prop);
+  }
+}
+
+function getBgUrl(el) {
+  const bg = (el && el.style && el.style.backgroundImage) || '';
+  const m = bg.match(/url\(["']?(.*?)["']?\)/i);
+  return m ? m[1] : null;
+}
+
+function collectImageUrls(nodes) {
+  const urls = new Set();
+  nodes.forEach(n => {
+    // <img> tags inside the page
+    n.querySelectorAll('img').forEach(img => {
+      if (img.src) urls.add(img.src);
+    });
+    // CSS backgrounds on known containers (your templates)
+    const tpl1 = n.querySelector('#tpl1-bg');
+    const tpl2 = n.querySelector('#tpl2-bg');
+    [tpl1, tpl2].forEach(el => {
+      const u = el ? getBgUrl(el) : null;
+      if (u) urls.add(u);
+    });
+  });
+  return Array.from(urls);
+}
+
+async function preloadUrls(urls) {
+  // skip data URLs
+  const httpUrls = urls.filter(u => !/^data:/i.test(u));
+  await Promise.all(httpUrls.map(u => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.decoding = 'async';
+      img.onload = () => {
+        if (img.decode) {
+          img.decode().then(resolve).catch(() => resolve());
+        } else {
+          resolve();
+        }
+      };
+      img.onerror = () => reject(new Error('Failed to load ' + u));
+      img.src = u;
+    });
+  }));
+}
+
+function canvasToJpegBlob(canvas, quality = 0.95) {
+  return new Promise(resolve => {
+    canvas.toBlob(b => {
+      if (b) return resolve(b);
+      // Fallback for browsers that return null
+      try {
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        // turn dataURL into Blob
+        const byteString = atob(dataUrl.split(',')[1]);
+        const mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+        resolve(new Blob([ab], { type: mimeString }));
+      } catch {
+        resolve(null);
+      }
+    }, 'image/jpeg', quality);
+  });
+}
+
+async function downloadBlob(blob, filename) {
+  if (!blob || blob.size === 0) throw new Error('Empty blob');
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // revoke after a short delay so the download can start
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+// ---------- robust export ----------
+el('btn-export-jpeg')?.addEventListener('click', async () => {
+  refreshPreview();
+
+  // Wait for all fonts to fully load before exporting
+  await document.fonts.ready;
+
+  // Capture state
+  document.body.classList.add('exporting');
+  refreshPreview();  // reflow with export CSS
+  const section = el('preview-section');
+
+  const prevPosition = section.style.position;
+  section.style.position = 'static';
+
+  const pages = [el('page1')];
+  const hasPage2 = !el('page2').classList.contains('hidden');
+  if (hasPage2) pages.push(el('page2'));
+
+  // Ensure all <img> tags use CORS (safe for data URLs, too)
+  pages.forEach(p => p.querySelectorAll('img').forEach(img => img.crossOrigin = 'anonymous'));
+
+  // Wait a frame so styles/DOM updates settle
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  // Preload all images (including background templates)
+  const urls = collectImageUrls(pages);
+  try { await preloadUrls(urls); } catch (e) {
+    console.warn('Some images failed to preload:', e);
+    // keep going; html2canvas will skip failed ones if allowTaint=false
+  }
+
+  const baseName = (state.title?.trim() || 'Recipe').replace(/[^a-z0-9_\- ]/gi, '_');
+
+  try {
+    for (let i = 0; i < pages.length; i++) {
+      const node = pages[i];
+
+      // Inline all computed styles to ensure exact match with preview
+      inlineAllStyles(node);
+
+      // Get the actual dimensions from the preview
+      const rect = node.getBoundingClientRect();
+
+      const canvas = await html2canvas(node, {
+        scale: window.devicePixelRatio,  // Match device pixel ratio for exact rendering
+        width: rect.width,
+        height: rect.height,
+        useCORS: true,
+        allowTaint: false,          // avoid tainted canvas => null blob
+        backgroundColor: '#ffffff',
+        imageTimeout: 20000,
+        removeContainer: true
+      });
+
+      const blob = await canvasToJpegBlob(canvas, 0.95);
+      if (!blob) throw new Error('toBlob and toDataURL both failed');
+
+      const filename = pages.length > 1 ? `${baseName} - Page ${i + 1}.jpg` : `${baseName}.jpg`;
+      await downloadBlob(blob, filename);
+    }
+  } catch (err) {
+    console.error('Export error:', err);
+    alert('Export failed. This usually means a remote image blocked CORS or the browser aborted the canvas.\n' +
+          'Try uploading images (data URLs) or hosting them with CORS enabled, then export again.');
+  } finally {
+    document.body.classList.remove('exporting');
+    refreshPreview();  // restore normal layout
+    section.style.position = prevPosition || '';
+  }
+});
+
+
+
+// ==================
+// Copy ChatGPT Instructions
+// ==================
+el('copy-instructions-btn')?.addEventListener('click', async () => {
+  const instructions = `Task: Convert the attached recipe into my Master Paste format.
+
+Produce the Master Paste text with these sections, exactly as shown:
+
+::META::
+title;mealtype;dietary;serves;preptime;cooktime;calories;protein;carbs;fat
+
+::TEXT::  (optional, repeatable for multiple text blocks)
+<Label line>
+<Paragraph text>
+
+::INGREDIENTS::
+Either a single default table with 3 semicolon columns:
+Ingredient;Amount (US);Amount (Metric)
+<Row 1>
+<Row 2>
+…
+OR multiple named tables, each started by:
+::TABLE <name>::
+Ingredient;Amount (US);Amount (Metric)
+<Row 1>
+<Row 2>
+
+::DIRECTIONS::
+One step per line (no numbering)
+
+RULES:
+- mealtype must be one of: Breakfast, Lunch/Dinner, Snack, Dessert, Sauce
+- dietary is a comma list from: gf, sf, nf, wf (leave empty if none apply)
+- Keep ingredient names verbatim from the recipe
+- Keep amounts in both US and Metric with units
+- Times are numbers in minutes only (no units)
+- Macros are numbers only (no units)
+- Do not number the directions
+- If the recipe has multiple ingredient sections (like "Bowl" and "Sauce"), use ::TABLE <name>:: for each
+
+EXAMPLE OUTPUT:
+
+::META::
+Ultimate Tofu Bowl;Lunch/Dinner;gf,wf;4;10;20;520;38;62;14
+
+::TEXT::
+Notes
+Use extra-firm tofu and press well.
+
+::INGREDIENTS::
+::TABLE Bowl::
+Ingredient;Amount (US);Amount (Metric)
+Firm Tofu, cooked;28 oz;794 g
+Brown Rice, cooked;3 cups;600 g
+Baby Spinach;6 cups;180 g
+
+::TABLE Sauce::
+Ingredient;Amount (US);Amount (Metric)
+Soy Sauce, low sodium;3 tbsp;45 ml
+Maple Syrup;1 tbsp;15 ml
+Rice Vinegar;1 tbsp;15 ml
+
+::DIRECTIONS::
+Press and cube tofu.
+Sear tofu until golden.
+Whisk sauce and add to pan.
+Toss with rice and spinach. Serve hot.`;
+
+  const btn = el('copy-instructions-btn');
+  const statusEl = el('master-paste-status');
+
+  try {
+    await navigator.clipboard.writeText(instructions);
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    statusEl.textContent = 'Instructions copied to clipboard - paste with your recipe screenshot in ChatGPT';
+    statusEl.className = 'text-sm text-blue-400';
+
+    setTimeout(() => {
+      btn.textContent = originalText;
+      statusEl.textContent = '';
+    }, 3000);
+  } catch (err) {
+    // Fallback for browsers without clipboard API
+    const textarea = document.createElement('textarea');
+    textarea.value = instructions;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    statusEl.textContent = 'Instructions copied to clipboard - paste with your recipe screenshot in ChatGPT';
+    statusEl.className = 'text-sm text-blue-400';
+
+    setTimeout(() => {
+      btn.textContent = originalText;
+      statusEl.textContent = '';
+    }, 3000);
+  }
+});
+
+// ==================
+// Copy Ingredients Prompt
+// ==================
+el('copy-ingredients-prompt-btn')?.addEventListener('click', async () => {
+  const instructions = `Task: Extract ingredients from the attached recipe image and format as semicolon-separated data.
+
+Output Format:
+For each ingredient, provide exactly 3 fields separated by semicolons:
+Ingredient Name;Amount (US);Amount (Metric)
+
+RULES:
+1. Keep ingredient names exactly as shown in the recipe
+2. Include full US measurements with units (cups, tbsp, tsp, oz, lb, etc.)
+3. Convert to metric with units (ml, g, kg, L, etc.)
+4. If the recipe has multiple ingredient sections (like "For the Bowl" and "For the Sauce"), separate them with a blank line and add a section label
+5. Each ingredient should be on its own line
+6. Use semicolons (;) as separators, NOT commas
+7. Maintain the order of ingredients as they appear in the recipe
+
+EXAMPLE OUTPUT:
+
+For the Bowl:
+Firm Tofu, pressed and cubed;28 oz;794 g
+Brown Rice, cooked;3 cups;600 g
+Baby Spinach;6 cups;180 g
+Red Bell Pepper, diced;1 medium;150 g
+
+For the Sauce:
+Soy Sauce, low sodium;3 tbsp;45 ml
+Maple Syrup;1 tbsp;15 ml
+Rice Vinegar;1 tbsp;15 ml
+Sesame Oil;1 tsp;5 ml
+
+Instructions:
+1. Copy this prompt
+2. Open ChatGPT and paste it
+3. Attach a photo of your recipe's ingredient list
+4. Copy the output and paste it into the table's "Paste data" field
+5. Click "Fill Table" to populate the ingredient table`;
+
+  const btn = el('copy-ingredients-prompt-btn');
+  const statusEl = el('ingredients-prompt-status');
+
+  try {
+    await navigator.clipboard.writeText(instructions);
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    statusEl.textContent = 'Prompt copied to clipboard - paste with your ingredient list image in ChatGPT';
+    statusEl.className = 'text-sm text-blue-400';
+
+    setTimeout(() => {
+      btn.textContent = originalText;
+      statusEl.textContent = '';
+    }, 3000);
+  } catch (err) {
+    // Fallback for browsers without clipboard API
+    const textarea = document.createElement('textarea');
+    textarea.value = instructions;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    statusEl.textContent = 'Prompt copied to clipboard - paste with your ingredient list image in ChatGPT';
+    statusEl.className = 'text-sm text-blue-400';
+
+    setTimeout(() => {
+      btn.textContent = originalText;
+      statusEl.textContent = '';
+    }, 3000);
+  }
+});
+
+// ==================
+// Master Paste Fill
+// ==================
+el('fill-all-btn')?.addEventListener('click', () => {
+  const textarea = el('master-paste');
+  const statusEl = el('master-paste-status');
+  const text = textarea.value.trim();
+
+  if (!text) {
+    statusEl.textContent = 'Please paste recipe text first';
+    statusEl.className = 'text-sm text-red-400';
+    return;
+  }
+
+  try {
+    const parsed = parseMasterPaste(text);
+
+    // Apply to state
+    state.title = parsed.title;
+    state.titleColor = state.titleColor || '#ffffff';
+    state.mealType = parsed.meal_type;
+    state.dietary = parsed.dietary_indicators;
+    state.serves = parsed.serves;
+    state.prep = parsed.prep_time;
+    state.cook = parsed.cook_time;
+    state.cal = parsed.calories;
+    state.pro = parsed.protein;
+    state.carb = parsed.carbs;
+    state.fat = parsed.fat;
+    state.textSections = parsed.extra_text_sections;
+    state.tables = parsed.tables.map(t => ({
+      name: t.name,
+      rows: t.data,
+      paste: ''
+    }));
+    state.steps = parsed.directions;
+
+    // Update UI elements
+    el('title').value = state.title;
+    el('serves').value = state.serves;
+    el('prep').value = state.prep;
+    el('cook').value = state.cook;
+    el('cal').value = state.cal;
+    el('pro').value = state.pro;
+    el('carb').value = state.carb;
+    el('fat').value = state.fat;
+
+    // Set meal type radio
+    document.querySelectorAll('input[name="meal"]').forEach(r => {
+      r.checked = (r.value === state.mealType);
+    });
+
+    // Set dietary checkboxes
+    el('gf').checked = !!state.dietary.gf;
+    el('sf').checked = !!state.dietary.sf;
+    el('nf').checked = !!state.dietary.nf;
+    el('wf').checked = !!state.dietary.wf;
+
+    // Re-render sections
+    renderTextSections();
+    renderTables();
+    renderSteps();
+    refreshPreview();
+
+    statusEl.textContent = '✓ Recipe loaded successfully!';
+    statusEl.className = 'text-sm text-emerald-400';
+
+    // Clear status after 3 seconds
+    setTimeout(() => {
+      statusEl.textContent = '';
+    }, 3000);
+
+  } catch (err) {
+    console.error('Parse error:', err);
+    statusEl.textContent = '✗ Parse error: ' + err.message;
+    statusEl.className = 'text-sm text-red-400';
+  }
+});
+
+// =======
+// Boot
+// =======
+renderTextSections();
+renderTables();
+renderSteps();
+refreshPreview();
+</script>
+
+
+
+
+
+
+
+</body>
+
+</html>

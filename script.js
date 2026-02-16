@@ -930,6 +930,33 @@ el('macros-layout-vertical')?.addEventListener('change', e => {
 // =======================
 const PRESETS_KEY = 'recipe_style_presets';
 
+// Built-in presets that always appear
+const BUILT_IN_PRESETS = [
+  {
+    name: 'Printer Friendly',
+    builtIn: true,
+    style: {
+      leftPanelColor: '#ffffff',
+      leftPanelFontColor: '#000000',
+      leftPanelBorderEnabled: true,
+      leftPanelBorderColor: '#000000',
+      leftPanelBorderWidth: 2,
+      leftPanelBorderRadius: 6,
+      leftPanelOpacity: 1,
+      leftPanelScale: 100,
+      leftPanelX: 0,
+      leftPanelY: 0,
+      rightPanelScale: 100,
+      rightPanelX: 0,
+      rightPanelY: 0,
+      panelsLinked: true,
+      titleColor: '#000000',
+      titleFont: 36,
+      leftPanelFont: 14
+    }
+  }
+];
+
 function getStylePreset() {
   return {
     leftPanelColor: state.leftPanelColor,
@@ -1027,11 +1054,12 @@ function renderPresets() {
   const grid = el('presets-grid');
   if (!grid) return;
 
-  const presets = loadPresets();
+  const userPresets = loadPresets();
+  const allPresets = [...BUILT_IN_PRESETS, ...userPresets];
   grid.innerHTML = '';
 
-  // Render existing presets
-  presets.forEach((preset, idx) => {
+  // Render all presets (built-in + user)
+  allPresets.forEach((preset, idx) => {
     const card = document.createElement('div');
     card.className = 'preset-card';
 
@@ -1057,19 +1085,23 @@ function renderPresets() {
     title.textContent = preset.name;
     card.appendChild(title);
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.textContent = '×';
-    deleteBtn.title = 'Delete preset';
-    deleteBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (confirm(`Delete preset "${preset.name}"?`)) {
-        const updated = presets.filter((_, i) => i !== idx);
-        savePresets(updated);
-        renderPresets();
-      }
-    };
-    card.appendChild(deleteBtn);
+    // Only show delete button for user presets (not built-in)
+    if (!preset.builtIn) {
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = '×';
+      deleteBtn.title = 'Delete preset';
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (confirm(`Delete preset "${preset.name}"?`)) {
+          const userIdx = idx - BUILT_IN_PRESETS.length;
+          const updated = userPresets.filter((_, i) => i !== userIdx);
+          savePresets(updated);
+          renderPresets();
+        }
+      };
+      card.appendChild(deleteBtn);
+    }
 
     card.onclick = () => {
       applyStylePreset(preset.style);
@@ -3205,7 +3237,7 @@ async function aiImportFromImage(file) {
         'Authorization': `Bearer ${getOpenAIKey()}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'user',

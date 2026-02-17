@@ -31,9 +31,12 @@
         <div class="menu-item relative">
           <button class="menu-trigger px-3 py-1 text-sm text-slate-300 hover:bg-slate-700 rounded">File</button>
           <div class="menu-dropdown absolute left-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-48 py-1">
-            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="new">
-              <span>New Recipe</span>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="wizard">
+              <span>Recipe Wizard...</span>
               <span class="text-slate-500 text-xs">Ctrl+N</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700" data-action="new">
+              <span>New Recipe (Blank)</span>
             </button>
             <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="open">
               <span>Open...</span>
@@ -92,13 +95,71 @@
         <!-- View Menu -->
         <div class="menu-item relative">
           <button class="menu-trigger px-3 py-1 text-sm text-slate-300 hover:bg-slate-700 rounded">View</button>
-          <div class="menu-dropdown absolute left-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-48 py-1">
+          <div class="menu-dropdown absolute left-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-56 py-1">
             <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-action-bar">
               <span>Show Action Bar</span>
               <span class="checkmark text-emerald-400">✓</span>
             </button>
             <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-dev-features">
               <span>Show Developmental Features</span>
+              <span class="checkmark text-emerald-400" style="display: none;">✓</span>
+            </button>
+            <div class="border-t border-slate-600 my-1"></div>
+            <div class="px-4 py-1 text-xs text-slate-500 uppercase tracking-wider">Sections</div>
+            <div class="flex gap-1 px-3 pb-1">
+              <button class="menu-action flex-1 text-center px-2 py-1 text-xs text-slate-300 hover:bg-slate-700 rounded" data-action="expand-all-sections">Expand All Accordions</button>
+              <button class="menu-action flex-1 text-center px-2 py-1 text-xs text-slate-300 hover:bg-slate-700 rounded" data-action="collapse-all-sections">Collapse All Accordions</button>
+            </div>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-master-paste">
+              <span>Master Paste</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-style-presets">
+              <span>Style Presets</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-left-panel-style">
+              <span>Left Panel Style</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-recipe-title">
+              <span>Recipe Title</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-recipe-image">
+              <span>Recipe Image</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-logo">
+              <span>Logo</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-meal-dietary">
+              <span>Meal Type &amp; Dietary</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-info-macros">
+              <span>Recipe Info &amp; Macros</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-additional-text">
+              <span>Additional Text</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-ingredients">
+              <span>Ingredient Tables</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-directions">
+              <span>Directions</span>
+              <span class="checkmark text-emerald-400">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-directions-positioning">
+              <span>Directions Positioning</span>
+              <span class="checkmark text-emerald-400" style="display: none;">✓</span>
+            </button>
+            <button class="menu-action w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 flex items-center justify-between" data-action="toggle-section" data-section="section-templates">
+              <span>Templates</span>
               <span class="checkmark text-emerald-400" style="display: none;">✓</span>
             </button>
           </div>
@@ -113,7 +174,7 @@
               Contact <a href="mailto:matt.lowe@thevegangym.com" class="text-emerald-400 hover:underline">matt.lowe@thevegangym.com</a> for help
             </div>
             <div class="border-t border-slate-600 my-1"></div>
-            <div class="px-4 py-2 text-sm text-slate-500">Version 3.0</div>
+            <div class="px-4 py-2 text-sm text-slate-500">Version 4.0</div>
           </div>
         </div>
       </div>
@@ -139,7 +200,7 @@
       <section class="space-y-6">
 
         <!-- Master Paste Section -->
-        <div class="section-container">
+        <div id="section-master-paste" class="section-container">
           <h2 class="section-header">
             <span>Master Paste</span>
             <span class="help-icon">?
@@ -175,8 +236,21 @@ Step two"></textarea>
           </div>
         </div>
 
+        <!-- Style Presets Section -->
+        <div id="section-style-presets" class="section-container">
+          <h2 class="section-header">
+            <span>Style Presets</span>
+            <span class="help-icon">?
+              <span class="tooltip">Save and load your favorite left panel style combinations. Click a preset to apply it, or click "New Preset" to save your current style settings for later use.</span>
+            </span>
+          </h2>
+          <div class="space-y-3">
+            <div id="presets-grid" class="grid grid-cols-2 gap-3"></div>
+          </div>
+        </div>
+
         <!-- Main Style Options -->
-        <div class="section-container">
+        <div id="section-left-panel-style" class="section-container">
           <h2 class="section-header">
             <span>Left Panel Style</span>
             <span class="help-icon">?
@@ -232,6 +306,28 @@ Step two"></textarea>
                 <input id="lp-font-manual" type="number" min="10" max="20" step="1" value="14"
                   class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
                 <span id="lp-font-value" class="text-sm min-w-[45px]">14px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Border -->
+          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <input id="show-border" type="checkbox" />
+                <label for="show-border" class="text-sm text-slate-300 font-semibold">Enable Border</label>
+              </div>
+              <button class="reset-btn" id="reset-border" title="Reset border settings">↻</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400">Border Width</label>
+              <div class="flex items-center gap-3">
+                <input id="border-size" type="range" min="0" max="10" step="1" value="2"
+                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                <input id="border-size-manual" type="number" min="0" max="10" step="1" value="2"
+                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
+                <span id="border-size-value" class="text-sm min-w-[45px]">2px</span>
               </div>
             </div>
           </div>
@@ -355,44 +451,10 @@ Step two"></textarea>
             </div>
           </div>
 
-          <!-- Border -->
-          <div class="space-y-3 mt-4 pt-3 border-t border-slate-700">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <input id="show-border" type="checkbox" />
-                <label for="show-border" class="text-sm text-slate-300 font-semibold">Enable Border</label>
-              </div>
-              <button class="reset-btn" id="reset-border" title="Reset border settings">↻</button>
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-xs text-slate-400">Border Width</label>
-              <div class="flex items-center gap-3">
-                <input id="border-size" type="range" min="0" max="10" step="1" value="2"
-                  class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
-                <input id="border-size-manual" type="number" min="0" max="10" step="1" value="2"
-                  class="w-20 px-2 py-1 rounded bg-slate-800 text-sm" />
-                <span id="border-size-value" class="text-sm min-w-[45px]">2px</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Style Presets Section -->
-        <div class="section-container">
-          <h2 class="section-header">
-            <span>Style Presets</span>
-            <span class="help-icon">?
-              <span class="tooltip">Save and load your favorite left panel style combinations. Click a preset to apply it, or click "New Preset" to save your current style settings for later use.</span>
-            </span>
-          </h2>
-          <div class="space-y-3">
-            <div id="presets-grid" class="grid grid-cols-2 gap-3"></div>
-          </div>
         </div>
 
         <!-- Recipe Title Section -->
-        <div class="section-container">
+        <div id="section-recipe-title" class="section-container">
           <h2 class="section-header">
             <div class="flex items-center gap-2">
               <input id="show-title" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
@@ -424,7 +486,7 @@ Step two"></textarea>
         </div>
 
         <!-- Recipe Image Section -->
-        <div class="section-container">
+        <div id="section-recipe-image" class="section-container">
           <div class="flex items-center gap-2">
             <input id="show-recipe-image" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
             <h2 class="section-header mb-0">Recipe Image</h2>
@@ -442,7 +504,7 @@ Step two"></textarea>
         </div>
 
         <!-- Logo Section -->
-        <div class="section-container">
+        <div id="section-logo" class="section-container">
           <div class="flex items-center gap-2">
             <input id="show-logo" type="checkbox" class="w-4 h-4 rounded cursor-pointer" />
             <h2 class="section-header mb-0">Logo</h2>
@@ -464,7 +526,7 @@ Step two"></textarea>
             <button id="reset-logo-size" class="reset-btn" title="Reset logo size to default">↻</button>
           </div>
         </div><!-- Meal Type and Dietary Section -->
-        <div class="section-container">
+        <div id="section-meal-dietary" class="section-container">
           <h2 class="section-header">
             <span>Meal Type & Dietary</span>
             <span class="help-icon">?
@@ -554,7 +616,7 @@ Step two"></textarea>
 
 
 
-        <div class="section-container">
+        <div id="section-info-macros" class="section-container">
           <h2 class="section-header">
             <span>Recipe Information & Macros</span>
             <span class="help-icon">?
@@ -625,7 +687,7 @@ Step two"></textarea>
           </div>
         </div>
         <!-- Additional Text Section -->
-        <div class="section-container">
+        <div id="section-additional-text" class="section-container">
           <div class="flex items-center gap-2">
             <input id="show-text-sections" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
             <h2 class="section-header mb-0">Additional Text</h2>
@@ -642,7 +704,7 @@ Step two"></textarea>
         </div>
 
         <!-- Ingredient Tables Section -->
-        <div class="section-container">
+        <div id="section-ingredients" class="section-container">
           <div class="flex items-center gap-2">
             <input id="show-ingredients" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
             <h2 class="section-header mb-0">Ingredient Tables</h2>
@@ -669,7 +731,7 @@ Step two"></textarea>
         </div>
 
         <!-- Directions Section -->
-        <div class="section-container">
+        <div id="section-directions" class="section-container">
           <div class="flex items-center gap-2">
             <input id="show-directions" type="checkbox" checked class="w-4 h-4 rounded cursor-pointer" />
             <h2 class="section-header mb-0">Directions</h2>
@@ -739,7 +801,7 @@ Step two"></textarea>
 
 
         <!-- Directions Positioning -->
-<div class="section-container">
+<div id="section-directions-positioning" class="section-container" style="display: none;">
   <h2 class="section-header">
     <span>Directions Positioning</span>
     <span class="help-icon">?
@@ -787,7 +849,7 @@ Step two"></textarea>
 
 
         <!-- Templates Section -->
-        <div class="section-container">
+        <div id="section-templates" class="section-container" style="display: none;">
           <h2 class="section-header">
             <span>Templates</span>
             <span class="help-icon">?
@@ -974,6 +1036,256 @@ Step two"></textarea>
       <div class="mt-6 flex justify-end">
         <button id="save-preferences" class="px-4 py-2 bg-emerald-500 text-slate-900 font-semibold rounded">Save</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Recipe Wizard Modal -->
+  <div id="wizard-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[60] flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-600 rounded-xl shadow-2xl w-full max-w-2xl flex flex-col" style="max-height: 90vh;">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-700 flex-shrink-0">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-100">🪄 Recipe Wizard</h2>
+          <p id="wizard-step-label" class="text-xs text-slate-400 mt-0.5">Step 1 of 3</p>
+        </div>
+        <button id="wizard-close" class="text-slate-500 hover:text-slate-200 text-2xl leading-none w-8 h-8 flex items-center justify-center">&times;</button>
+      </div>
+
+      <!-- Steps -->
+      <div class="flex-1 overflow-y-auto">
+
+        <!-- Step 1: Title -->
+        <div id="wizard-step-1" class="wizard-step px-6 py-6">
+          <label class="block text-sm font-medium text-slate-300 mb-2">Recipe Title</label>
+          <input id="wizard-title-input" type="text" placeholder="e.g. Creamy Tofu Tikka Masala" autocomplete="off"
+            class="w-full bg-slate-700 border border-slate-500 rounded-lg px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-base" />
+          <p class="text-xs text-slate-500 mt-2">You can change this anytime in the editor.</p>
+        </div>
+
+        <!-- Step img: Recipe Image -->
+        <div id="wizard-step-img" class="wizard-step hidden px-6 py-6">
+          <p class="text-xs text-slate-500 mb-4">Optional — you can add or change this anytime in the editor.</p>
+          <label id="wizard-img-label" class="flex flex-col items-center justify-center border-2 border-dashed border-slate-500 rounded-xl p-8 cursor-pointer hover:border-emerald-500 transition-colors">
+            <span id="wizard-img-preview-wrap" class="hidden mb-3 w-full flex justify-center">
+              <img id="wizard-img-preview" src="" alt="" class="max-h-40 rounded-lg object-cover" />
+            </span>
+            <span id="wizard-img-icon" class="text-4xl mb-2">🖼️</span>
+            <span id="wizard-img-label-text" class="text-sm text-slate-300">Click to choose a recipe image</span>
+            <span class="text-xs text-slate-500 mt-1">JPG, PNG, WEBP</span>
+            <input id="wizard-img-input" type="file" accept="image/*" hidden />
+          </label>
+          <div id="wizard-img-actions" class="hidden mt-3 flex items-center justify-between">
+            <p id="wizard-img-name" class="text-xs text-slate-400 truncate"></p>
+            <button id="wizard-img-clear" class="text-xs text-red-400 hover:text-red-300 transition-colors flex-shrink-0 ml-3">Remove</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Choose Method -->
+        <div id="wizard-step-2" class="wizard-step hidden px-6 py-6">
+          <p class="text-sm text-slate-400 mb-4">How would you like to set up <span id="wizard-title-preview" class="text-slate-200 font-medium"></span>?</p>
+          <div class="grid grid-cols-2 gap-3">
+            <button class="wizard-method-tile group flex flex-col items-center gap-2 bg-slate-700 hover:bg-slate-600 border-2 border-slate-600 hover:border-emerald-500 rounded-xl p-5 text-center transition-all" data-method="ai">
+              <span class="text-3xl">✨</span>
+              <span class="text-sm font-medium text-slate-200">AI Fill</span>
+              <span class="text-xs text-slate-400">Paste master format text to auto-populate all fields</span>
+            </button>
+            <button class="wizard-method-tile group flex flex-col items-center gap-2 bg-slate-700 hover:bg-slate-600 border-2 border-slate-600 hover:border-emerald-500 rounded-xl p-5 text-center transition-all" data-method="manual">
+              <span class="text-3xl">✏️</span>
+              <span class="text-sm font-medium text-slate-200">Manual Entry</span>
+              <span class="text-xs text-slate-400">Guided step-by-step through each section</span>
+            </button>
+            <button class="wizard-method-tile group flex flex-col items-center gap-2 bg-slate-700 hover:bg-slate-600 border-2 border-slate-600 hover:border-emerald-500 rounded-xl p-5 text-center transition-all" data-method="template">
+              <span class="text-3xl">🎨</span>
+              <span class="text-sm font-medium text-slate-200">From Template</span>
+              <span class="text-xs text-slate-400">Start with a saved style preset applied</span>
+            </button>
+            <button class="wizard-method-tile group flex flex-col items-center gap-2 bg-slate-700 hover:bg-slate-600 border-2 border-slate-600 hover:border-emerald-500 rounded-xl p-5 text-center transition-all" data-method="import">
+              <span class="text-3xl">📂</span>
+              <span class="text-sm font-medium text-slate-200">Import File</span>
+              <span class="text-xs text-slate-400">Open a .recipe file as a starting point</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 3a: AI Paste -->
+        <div id="wizard-step-3a" class="wizard-step hidden px-6 py-6">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-sm font-medium text-slate-300">Paste Master Format Text</label>
+            <div class="flex gap-2 flex-shrink-0 ml-3">
+              <button id="wizard-copy-prompt-btn" class="text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-700 hover:border-emerald-500 rounded px-2 py-0.5 transition-colors">Copy Prompt</button>
+              <button id="wizard-open-chatgpt-btn" class="text-xs text-sky-400 hover:text-sky-300 border border-sky-700 hover:border-sky-500 rounded px-2 py-0.5 transition-colors">Open in ChatGPT ↗</button>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 mb-3">Copy the prompt, paste it with your recipe screenshot into ChatGPT, then paste the result below.</p>
+          <textarea id="wizard-paste-input" rows="10" placeholder="::META::&#10;Recipe Title;Meal Type;dietary;serves;prep;cook;cal;protein;carbs;fat&#10;&#10;::INGREDIENTS::&#10;Header;Amount (US);Amount (Metric)&#10;Ingredient;1 cup;240ml&#10;&#10;::DIRECTIONS::&#10;Step one&#10;Step two"
+            class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2 text-slate-100 text-xs font-mono placeholder-slate-600 focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+          <p id="wizard-paste-status" class="text-xs mt-2 text-slate-500"></p>
+        </div>
+
+        <!-- Step M0: Style -->
+        <div id="wizard-step-m0" class="wizard-step hidden px-6 py-6">
+          <p class="text-sm text-slate-400 mb-3">Choose a style for your recipe page:</p>
+          <div id="wizard-manual-preset-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Step M1: Meal Type & Dietary -->
+        <div id="wizard-step-m1" class="wizard-step hidden px-6 py-6">
+          <p class="text-xs text-slate-500 mb-4">All fields are optional — skip anything you don't have yet.</p>
+          <div class="space-y-5">
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2">Meal Type</label>
+              <div class="flex flex-wrap gap-2" id="wizard-meal-type-group">
+                <button class="wizard-meal-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 hover:border-emerald-500 text-slate-300 transition-all" data-meal="Breakfast">Breakfast</button>
+                <button class="wizard-meal-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 hover:border-emerald-500 text-slate-300 transition-all" data-meal="Lunch/Dinner">Lunch/Dinner</button>
+                <button class="wizard-meal-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 hover:border-emerald-500 text-slate-300 transition-all" data-meal="Smoothie">Smoothie</button>
+                <button class="wizard-meal-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 hover:border-emerald-500 text-slate-300 transition-all" data-meal="Snack">Snack</button>
+                <button class="wizard-meal-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 hover:border-emerald-500 text-slate-300 transition-all" data-meal="Dessert">Dessert</button>
+                <button class="wizard-meal-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 hover:border-emerald-500 text-slate-300 transition-all" data-meal="Sauce">Sauce</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2">Dietary Flags</label>
+              <div class="flex flex-wrap gap-2">
+                <button class="wizard-dietary-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300 transition-all" data-dietary="gf">Gluten Free</button>
+                <button class="wizard-dietary-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300 transition-all" data-dietary="sf">Soy Free</button>
+                <button class="wizard-dietary-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300 transition-all" data-dietary="nf">Nut Free</button>
+                <button class="wizard-dietary-btn px-3 py-1.5 text-sm rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300 transition-all" data-dietary="wf">Wheat Free</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">Serves</label>
+                <input id="wizard-serves" type="text" placeholder="4" class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">Prep (mins)</label>
+                <input id="wizard-prep" type="text" placeholder="10" class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">Cook (mins)</label>
+                <input id="wizard-cook" type="text" placeholder="20" class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step M1b: Description & Notes -->
+        <div id="wizard-step-m1b" class="wizard-step hidden px-6 py-6">
+          <p class="text-xs text-slate-500 mb-4">Both fields are optional — leave blank to skip.</p>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-1">Description</label>
+              <p class="text-xs text-slate-500 mb-2">A short intro or overview of the recipe.</p>
+              <textarea id="wizard-description" rows="3" placeholder="A rich and creamy tofu curry packed with bold spices…"
+                class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-1">Notes</label>
+              <p class="text-xs text-slate-500 mb-2">Tips, substitutions, storage info, etc.</p>
+              <textarea id="wizard-notes" rows="3" placeholder="Store in an airtight container for up to 4 days. Serve over rice or with naan."
+                class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step M2: Macros -->
+        <div id="wizard-step-m2" class="wizard-step hidden px-6 py-6">
+          <p class="text-xs text-slate-500 mb-4">Per serving values — numbers only, no units.</p>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Calories</label>
+              <input id="wizard-cal" type="text" placeholder="520" class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Protein (g)</label>
+              <input id="wizard-pro" type="text" placeholder="38" class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Carbs (g)</label>
+              <input id="wizard-carb" type="text" placeholder="62" class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Fat (g)</label>
+              <input id="wizard-fat" type="text" placeholder="14" class="w-full bg-slate-700 border border-slate-500 rounded-lg px-3 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step M3: Ingredients -->
+        <div id="wizard-step-m3" class="wizard-step hidden px-6 py-6">
+          <p class="text-xs text-slate-500 mb-3">Add each ingredient with US and metric amounts. Leave blank to skip.</p>
+          <div class="grid gap-2 pr-1 mb-1" style="grid-template-columns: 2fr 1fr 1fr 1.5rem;">
+            <span class="text-xs text-slate-500 px-1">Ingredient</span>
+            <span class="text-xs text-slate-500 px-1">US Amount</span>
+            <span class="text-xs text-slate-500 px-1">Metric Amount</span>
+            <span></span>
+          </div>
+          <div id="wizard-ingredients-list" class="space-y-2 max-h-56 overflow-y-auto pr-1 mb-3">
+            <!-- Rows added dynamically -->
+          </div>
+          <button id="wizard-add-ingredient" class="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors">
+            <span class="text-lg leading-none">+</span> Add ingredient
+          </button>
+        </div>
+
+        <!-- Step M4: Directions -->
+        <div id="wizard-step-m4" class="wizard-step hidden px-6 py-6">
+          <p class="text-xs text-slate-500 mb-3">Add each step in order. Leave blank rows to skip.</p>
+          <div id="wizard-steps-list" class="space-y-2 max-h-64 overflow-y-auto pr-1 mb-3">
+            <!-- Rows added dynamically -->
+          </div>
+          <button id="wizard-add-step" class="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors">
+            <span class="text-lg leading-none">+</span> Add step
+          </button>
+        </div>
+
+        <!-- Step M5: Done -->
+        <div id="wizard-step-m5" class="wizard-step hidden px-6 py-6">
+          <div class="flex flex-col items-center text-center gap-3 py-4">
+            <span class="text-5xl">🎉</span>
+            <h3 class="text-lg font-semibold text-slate-100">All done!</h3>
+            <p class="text-sm text-slate-400 max-w-xs">Your recipe has been set up. Click <strong class="text-slate-200">Finish</strong> to open it in the editor where you can add images, adjust styling, and export.</p>
+            <div id="wizard-summary" class="mt-2 text-left w-full bg-slate-700 rounded-lg px-4 py-3 text-xs text-slate-300 space-y-1">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3b: Template Picker -->
+        <div id="wizard-step-3b" class="wizard-step hidden px-6 py-6">
+          <p class="text-sm text-slate-400 mb-3">Choose a style preset to apply:</p>
+          <div id="wizard-preset-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Step 3c: Import File -->
+        <div id="wizard-step-3c" class="wizard-step hidden px-6 py-6">
+          <p class="text-sm text-slate-400 mb-4">Choose a <code class="bg-slate-700 px-1 rounded">.recipe</code> file to use as a starting point. The title you entered will override the file's title.</p>
+          <label id="wizard-import-label" class="flex flex-col items-center justify-center border-2 border-dashed border-slate-500 rounded-xl p-8 cursor-pointer hover:border-emerald-500 transition-colors">
+            <span class="text-4xl mb-2">📂</span>
+            <span class="text-sm text-slate-300">Click to choose a .recipe file</span>
+            <input id="wizard-import-input" type="file" accept=".recipe" hidden />
+          </label>
+          <p id="wizard-import-name" class="text-xs text-slate-400 mt-3 text-center"></p>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-between px-6 py-4 border-t border-slate-700 flex-shrink-0">
+        <button id="wizard-back" class="text-sm text-slate-400 hover:text-slate-200 transition-colors hidden">← Back</button>
+        <div class="ml-auto flex gap-3">
+          <button id="wizard-cancel" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors">Cancel</button>
+          <button id="wizard-next" class="px-5 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+            Next →
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 

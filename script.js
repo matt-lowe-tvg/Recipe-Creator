@@ -2717,67 +2717,71 @@ function updateCurrentFileName(name) {
   }
 }
 
+function newRecipeSilent() {
+  // Reset state to defaults
+  Object.assign(state, {
+    title: '',
+    recipeImageURL: '',
+    logoURL: '',
+    showLogo: false,
+    mealType: '',
+    dietary: { gf: false, sf: false, nf: false, wf: false },
+    serves: '',
+    prep: '',
+    cook: '',
+    cal: '',
+    pro: '',
+    carb: '',
+    fat: '',
+    textSections: [],
+    tables: [],
+    steps: [],
+    tpl1URL: '',
+    tpl2URL: ''
+  });
+
+  // Clear form fields
+  el('title').value = '';
+  el('serves').value = '';
+  el('prep').value = '';
+  el('cook').value = '';
+  el('cal').value = '';
+  el('pro').value = '';
+  el('carb').value = '';
+  el('fat').value = '';
+  el('master-paste').value = '';
+
+  document.querySelectorAll('input[name="meal"]').forEach(r => r.checked = false);
+  el('gf').checked = false;
+  el('sf').checked = false;
+  el('nf').checked = false;
+  el('wf').checked = false;
+
+  el('img-name').textContent = 'No image';
+  el('tpl1-name').textContent = 'No template';
+  el('tpl2-name').textContent = 'Optional';
+
+  // Apply default logo if preference is enabled
+  const prefs = getPreferences();
+  if (prefs.useDefaultLogo) {
+    state.logoURL = DEFAULT_LOGO_URL;
+    state.showLogo = true;
+    el('show-logo').checked = true;
+    el('logo-name').textContent = 'Default logo';
+  } else {
+    el('logo-name').textContent = 'No logo';
+  }
+
+  renderTextSections();
+  renderTables();
+  renderSteps();
+  refreshPreview();
+  updateCurrentFileName('Untitled');
+}
+
 function newRecipe() {
   if (confirm('Create a new recipe? This will clear all current data.')) {
-    // Reset state to defaults
-    Object.assign(state, {
-      title: '',
-      recipeImageURL: '',
-      logoURL: '',
-      showLogo: false,
-      mealType: '',
-      dietary: { gf: false, sf: false, nf: false, wf: false },
-      serves: '',
-      prep: '',
-      cook: '',
-      cal: '',
-      pro: '',
-      carb: '',
-      fat: '',
-      textSections: [],
-      tables: [],
-      steps: [],
-      tpl1URL: '',
-      tpl2URL: ''
-    });
-
-    // Clear form fields
-    el('title').value = '';
-    el('serves').value = '';
-    el('prep').value = '';
-    el('cook').value = '';
-    el('cal').value = '';
-    el('pro').value = '';
-    el('carb').value = '';
-    el('fat').value = '';
-    el('master-paste').value = '';
-
-    document.querySelectorAll('input[name="meal"]').forEach(r => r.checked = false);
-    el('gf').checked = false;
-    el('sf').checked = false;
-    el('nf').checked = false;
-    el('wf').checked = false;
-
-    el('img-name').textContent = 'No image';
-    el('tpl1-name').textContent = 'No template';
-    el('tpl2-name').textContent = 'Optional';
-
-    // Apply default logo if preference is enabled
-    const prefs = getPreferences();
-    if (prefs.useDefaultLogo) {
-      state.logoURL = DEFAULT_LOGO_URL;
-      state.showLogo = true;
-      el('show-logo').checked = true;
-      el('logo-name').textContent = 'Default logo';
-    } else {
-      el('logo-name').textContent = 'No logo';
-    }
-
-    renderTextSections();
-    renderTables();
-    renderSteps();
-    refreshPreview();
-    updateCurrentFileName('Untitled');
+    newRecipeSilent();
   }
 }
 
@@ -2928,6 +2932,66 @@ function toggleDevFeatures() {
 })();
 
 // ====================
+// Section Visibility Toggles
+// ====================
+
+// Sections that are hidden by default (user must turn them on via View menu)
+const SECTIONS_HIDDEN_BY_DEFAULT = ['section-directions-positioning', 'section-templates'];
+
+function toggleSection(sectionId) {
+  const section = el(sectionId);
+  const menuItem = document.querySelector(`[data-action="toggle-section"][data-section="${sectionId}"]`);
+  const checkmark = menuItem?.querySelector('.checkmark');
+
+  if (!section) return;
+  const isVisible = section.style.display !== 'none';
+  section.style.display = isVisible ? 'none' : '';
+  if (checkmark) checkmark.style.display = isVisible ? 'none' : '';
+  try { localStorage.setItem(`section_visible_${sectionId}`, !isVisible); } catch {}
+}
+
+function setAllAccordions(open) {
+  const leftColumn = document.querySelector('.space-y-6');
+  if (!leftColumn) return;
+  leftColumn.querySelectorAll('.section-container').forEach((sec, idx) => {
+    // Only affect visible sections
+    if (sec.style.display === 'none') return;
+    const header = sec.querySelector('.section-header');
+    if (!header) return;
+    let headerWrapper = header.parentElement === sec ? header : header.parentElement;
+    const body = sec.querySelector('.accordion-body');
+    if (!body) return;
+    headerWrapper.setAttribute('aria-expanded', String(open));
+    body.classList.toggle('open', open);
+    try { localStorage.setItem(`accordion_open_${idx}`, open ? '1' : '0'); } catch {}
+  });
+}
+
+// Restore section visibility on load
+(function restoreSectionVisibility() {
+  document.querySelectorAll('[data-action="toggle-section"]').forEach(btn => {
+    const sectionId = btn.dataset.section;
+    if (!sectionId) return;
+    const section = el(sectionId);
+    const checkmark = btn.querySelector('.checkmark');
+    if (!section) return;
+
+    const saved = localStorage.getItem(`section_visible_${sectionId}`);
+    if (saved !== null) {
+      // Use saved preference
+      const visible = saved === 'true';
+      section.style.display = visible ? '' : 'none';
+      if (checkmark) checkmark.style.display = visible ? '' : 'none';
+    } else {
+      // No saved preference — use default visibility
+      const hiddenByDefault = SECTIONS_HIDDEN_BY_DEFAULT.includes(sectionId);
+      section.style.display = hiddenByDefault ? 'none' : '';
+      if (checkmark) checkmark.style.display = hiddenByDefault ? 'none' : '';
+    }
+  });
+})();
+
+// ====================
 // Preferences
 // ====================
 const DEFAULT_LOGO_URL = 'https://images.squarespace-cdn.com/content/579650b6ff7c50a2d8f5518f/efd2a126-acfd-4898-90a2-2da968c9defb/TVG+B%2BW.png';
@@ -2958,6 +3022,976 @@ function closePreferences() {
   const modal = document.getElementById('preferences-modal');
   if (modal) modal.classList.add('hidden');
 }
+
+// ─── Recipe Wizard ───────────────────────────────────────────────────────────
+
+(function initRecipeWizard() {
+  let wizardStep = 1;           // 1, 2, 'm1', 'm2', 'm3', 'm4', 'm5', '3a', '3b', '3c'
+  let wizardMethod = null;      // 'ai' | 'manual' | 'template' | 'import'
+  let wizardSelectedPreset = null;
+  let wizardImportData = null;
+  let wizardMealType = '';
+  let wizardDietary = { gf: false, sf: false, nf: false, wf: false };
+
+  const modal      = document.getElementById('wizard-modal');
+  const titleInput = document.getElementById('wizard-title-input');
+  const stepLabel  = document.getElementById('wizard-step-label');
+  const backBtn    = document.getElementById('wizard-back');
+  const nextBtn    = document.getElementById('wizard-next');
+  const cancelBtn  = document.getElementById('wizard-cancel');
+  const closeBtn   = document.getElementById('wizard-close');
+
+  const manualStepLabels = {
+    m0:  'Step 3 of 9 — Style',
+    m1:  'Step 4 of 9 — Meal Type & Info',
+    m1b: 'Step 5 of 9 — Description & Notes',
+    m2:  'Step 6 of 9 — Macros',
+    m3:  'Step 7 of 9 — Ingredients',
+    m4:  'Step 8 of 9 — Directions',
+    m5:  'Step 9 of 9 — Review'
+  };
+
+  function showStep(step) {
+    wizardStep = step;
+    document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
+
+    if (step === 1) {
+      document.getElementById('wizard-step-1').classList.remove('hidden');
+      stepLabel.textContent = 'Step 1 of 3 — Title';
+      backBtn.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Next →';
+      nextBtn.disabled = titleInput.value.trim() === '';
+
+    } else if (step === 'img') {
+      document.getElementById('wizard-step-img').classList.remove('hidden');
+      stepLabel.textContent = 'Step 2 of 3 — Recipe Image';
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Next →';
+      nextBtn.disabled = false;
+
+    } else if (step === 2) {
+      document.getElementById('wizard-step-2').classList.remove('hidden');
+      const preview = document.getElementById('wizard-title-preview');
+      if (preview) preview.textContent = '\u201c' + titleInput.value.trim() + '\u201d';
+      stepLabel.textContent = 'Step 3 of 3 — Choose Setup';
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+
+    } else if (step === 'm0') {
+      document.getElementById('wizard-step-m0').classList.remove('hidden');
+      populateWizardPresets('wizard-manual-preset-list');
+      stepLabel.textContent = manualStepLabels.m0;
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Next →';
+      nextBtn.disabled = false;
+
+    } else if (step === 'm1') {
+      document.getElementById('wizard-step-m1').classList.remove('hidden');
+      stepLabel.textContent = manualStepLabels.m1;
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Next →';
+      nextBtn.disabled = false;
+      syncMealTypeButtons();
+      syncDietaryButtons();
+
+    } else if (step === 'm1b') {
+      document.getElementById('wizard-step-m1b').classList.remove('hidden');
+      stepLabel.textContent = manualStepLabels.m1b;
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Next →';
+      nextBtn.disabled = false;
+
+    } else if (step === 'm2') {
+      document.getElementById('wizard-step-m2').classList.remove('hidden');
+      stepLabel.textContent = manualStepLabels.m2;
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Next →';
+      nextBtn.disabled = false;
+
+    } else if (step === 'm3') {
+      document.getElementById('wizard-step-m3').classList.remove('hidden');
+      stepLabel.textContent = manualStepLabels.m3;
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Next →';
+      nextBtn.disabled = false;
+      ensureIngredientRows();
+
+    } else if (step === 'm4') {
+      document.getElementById('wizard-step-m4').classList.remove('hidden');
+      stepLabel.textContent = manualStepLabels.m4;
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Next →';
+      nextBtn.disabled = false;
+      ensureStepRows();
+
+    } else if (step === 'm5') {
+      document.getElementById('wizard-step-m5').classList.remove('hidden');
+      stepLabel.textContent = manualStepLabels.m5;
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Finish';
+      nextBtn.disabled = false;
+      buildSummary();
+
+    } else if (step === '3a') {
+      document.getElementById('wizard-step-3a').classList.remove('hidden');
+      stepLabel.textContent = 'Step 3 of 3 — AI Fill';
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Finish';
+      nextBtn.disabled = document.getElementById('wizard-paste-input').value.trim() === '';
+
+    } else if (step === '3b') {
+      document.getElementById('wizard-step-3b').classList.remove('hidden');
+      populateWizardPresets();
+      stepLabel.textContent = 'Step 3 of 3 — Choose Template';
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Finish';
+      nextBtn.disabled = wizardSelectedPreset === null;
+
+    } else if (step === '3c') {
+      document.getElementById('wizard-step-3c').classList.remove('hidden');
+      stepLabel.textContent = 'Step 3 of 3 — Import File';
+      backBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = 'Finish';
+      nextBtn.disabled = wizardImportData === null;
+    }
+  }
+
+  // ── Manual step helpers ────────────────────────────────────────────────────
+
+  function syncMealTypeButtons() {
+    document.querySelectorAll('.wizard-meal-btn').forEach(btn => {
+      const active = btn.dataset.meal === wizardMealType;
+      btn.classList.toggle('border-emerald-500', active);
+      btn.classList.toggle('bg-emerald-700', active);
+      btn.classList.toggle('text-white', active);
+      btn.classList.toggle('bg-slate-700', !active);
+      btn.classList.toggle('text-slate-300', !active);
+    });
+  }
+
+  function syncDietaryButtons() {
+    document.querySelectorAll('.wizard-dietary-btn').forEach(btn => {
+      const key = btn.dataset.dietary;
+      const active = !!wizardDietary[key];
+      btn.classList.toggle('border-emerald-500', active);
+      btn.classList.toggle('bg-emerald-700', active);
+      btn.classList.toggle('text-white', active);
+      btn.classList.toggle('bg-slate-700', !active);
+      btn.classList.toggle('text-slate-300', !active);
+    });
+  }
+
+  function addIngredientRow(name = '', us = '', metric = '') {
+    const list = document.getElementById('wizard-ingredients-list');
+    const row = document.createElement('div');
+    row.className = 'wizard-ingredient-row grid gap-2 items-center';
+    row.style.gridTemplateColumns = '2fr 1fr 1fr 1.5rem';
+    row.innerHTML = `
+      <input type="text" placeholder="e.g. Firm Tofu" value="${name}"
+        class="wizard-ing-name min-w-0 bg-slate-700 border border-slate-500 rounded px-2 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+      <input type="text" placeholder="e.g. 28 oz" value="${us}"
+        class="wizard-ing-us min-w-0 bg-slate-700 border border-slate-500 rounded px-2 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+      <input type="text" placeholder="e.g. 794 g" value="${metric}"
+        class="wizard-ing-metric min-w-0 bg-slate-700 border border-slate-500 rounded px-2 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+      <button class="wizard-remove-row text-slate-500 hover:text-red-400 text-lg leading-none transition-colors text-center" title="Remove">×</button>
+    `;
+    row.querySelector('.wizard-remove-row').addEventListener('click', () => row.remove());
+    list.appendChild(row);
+    row.querySelector('.wizard-ing-name').focus();
+  }
+
+  function ensureIngredientRows() {
+    const list = document.getElementById('wizard-ingredients-list');
+    if (list && list.querySelectorAll('.wizard-ingredient-row').length === 0) {
+      addIngredientRow();
+    }
+  }
+
+  function addStepRow(text = '') {
+    const list = document.getElementById('wizard-steps-list');
+    const idx = list.querySelectorAll('.wizard-step-row').length + 1;
+    const row = document.createElement('div');
+    row.className = 'wizard-step-row flex gap-2 items-start';
+    row.innerHTML = `
+      <span class="wizard-step-num text-xs text-slate-500 pt-2.5 w-5 text-right flex-shrink-0">${idx}.</span>
+      <input type="text" placeholder="Describe this step…" value="${text}"
+        class="flex-1 bg-slate-700 border border-slate-500 rounded px-2 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+      <button class="wizard-remove-row text-slate-500 hover:text-red-400 text-lg leading-none flex-shrink-0 pt-1 transition-colors" title="Remove">×</button>
+    `;
+    row.querySelector('.wizard-remove-row').addEventListener('click', () => {
+      row.remove();
+      // Renumber
+      document.querySelectorAll('#wizard-steps-list .wizard-step-num').forEach((n, i) => { n.textContent = (i + 1) + '.'; });
+    });
+    list.appendChild(row);
+    row.querySelector('input').focus();
+  }
+
+  function ensureStepRows() {
+    const list = document.getElementById('wizard-steps-list');
+    if (list && list.querySelectorAll('.wizard-step-row').length === 0) {
+      addStepRow();
+    }
+  }
+
+  function getIngredients() {
+    return Array.from(document.querySelectorAll('#wizard-ingredients-list .wizard-ingredient-row'))
+      .map(row => ({
+        name: row.querySelector('.wizard-ing-name')?.value.trim() || '',
+        us:   row.querySelector('.wizard-ing-us')?.value.trim()   || '',
+        metric: row.querySelector('.wizard-ing-metric')?.value.trim() || ''
+      }))
+      .filter(r => r.name || r.us || r.metric);
+  }
+
+  function getDirections() {
+    return Array.from(document.querySelectorAll('#wizard-steps-list .wizard-step-row input'))
+      .map(i => i.value.trim())
+      .filter(Boolean);
+  }
+
+  function buildSummary() {
+    const summary = document.getElementById('wizard-summary');
+    if (!summary) return;
+    const serves = document.getElementById('wizard-serves')?.value.trim();
+    const prep   = document.getElementById('wizard-prep')?.value.trim();
+    const cook   = document.getElementById('wizard-cook')?.value.trim();
+    const cal    = document.getElementById('wizard-cal')?.value.trim();
+    const pro    = document.getElementById('wizard-pro')?.value.trim();
+    const carb   = document.getElementById('wizard-carb')?.value.trim();
+    const fat    = document.getElementById('wizard-fat')?.value.trim();
+    const description = document.getElementById('wizard-description')?.value.trim();
+    const notes       = document.getElementById('wizard-notes')?.value.trim();
+    const ings   = getIngredients();
+    const dirs   = getDirections();
+    const flags  = Object.entries(wizardDietary).filter(([,v]) => v).map(([k]) => k.toUpperCase());
+
+    const allPresets = [...BUILT_IN_PRESETS, ...loadPresets()];
+    const presetName = wizardSelectedPreset
+      ? (allPresets.find(p => p.style === wizardSelectedPreset)?.name || 'Custom Preset')
+      : 'Default Style';
+
+    const lines = [
+      `<strong class="text-slate-200">Title:</strong> ${titleInput.value.trim() || '—'}`,
+      `<strong class="text-slate-200">Image:</strong> ${wizardImageDataURL ? 'Added' : 'None'}`,
+      `<strong class="text-slate-200">Style:</strong> ${presetName}`,
+      wizardMealType ? `<strong class="text-slate-200">Meal type:</strong> ${wizardMealType}` : null,
+      flags.length   ? `<strong class="text-slate-200">Dietary:</strong> ${flags.join(', ')}` : null,
+      serves         ? `<strong class="text-slate-200">Serves:</strong> ${serves}` : null,
+      (prep || cook) ? `<strong class="text-slate-200">Time:</strong> ${[prep && prep + ' min prep', cook && cook + ' min cook'].filter(Boolean).join(', ')}` : null,
+      cal            ? `<strong class="text-slate-200">Macros:</strong> ${cal} kcal · ${pro || 0}g protein · ${carb || 0}g carbs · ${fat || 0}g fat` : null,
+      description ? `<strong class="text-slate-200">Description:</strong> ${description.length > 60 ? description.slice(0, 60) + '…' : description}` : null,
+      notes       ? `<strong class="text-slate-200">Notes:</strong> ${notes.length > 60 ? notes.slice(0, 60) + '…' : notes}` : null,
+      `<strong class="text-slate-200">Ingredients:</strong> ${ings.length ? ings.length + ' added' : 'none'}`,
+      `<strong class="text-slate-200">Directions:</strong> ${dirs.length ? dirs.length + ' step' + (dirs.length !== 1 ? 's' : '') : 'none'}`,
+    ].filter(Boolean);
+
+    summary.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+  }
+
+  function populateWizardPresets(containerId = 'wizard-preset-list') {
+    const list = document.getElementById(containerId);
+    if (!list) return;
+    list.innerHTML = '';
+
+    // Re-highlight previously selected option if one exists
+    const currentPreset = wizardSelectedPreset;
+
+    // Always include a "Default" option
+    const defaultOption = document.createElement('button');
+    defaultOption.className = 'wizard-preset-option w-full text-left px-4 py-3 rounded-lg border-2 border-slate-600 hover:border-emerald-500 bg-slate-700 hover:bg-slate-600 transition-all flex items-center gap-3';
+    defaultOption.dataset.presetIndex = '-1';
+
+    const defaultSwatch = document.createElement('span');
+    defaultSwatch.className = 'w-6 h-6 rounded flex-shrink-0 border border-slate-500';
+    defaultSwatch.style.backgroundColor = '#0d1b2a';
+    defaultOption.appendChild(defaultSwatch);
+
+    const defaultLabel = document.createElement('span');
+    defaultLabel.className = 'text-sm font-medium text-slate-200';
+    defaultLabel.textContent = 'Default Style';
+    defaultOption.appendChild(defaultLabel);
+
+    const defaultHint = document.createElement('span');
+    defaultHint.className = 'text-xs text-slate-400 ml-1';
+    defaultHint.textContent = '— Standard dark blue panel';
+    defaultOption.appendChild(defaultHint);
+
+    defaultOption.addEventListener('click', () => {
+      wizardSelectedPreset = null;
+      list.querySelectorAll('.wizard-preset-option').forEach(b => b.classList.remove('border-emerald-500', 'bg-slate-600'));
+      defaultOption.classList.add('border-emerald-500', 'bg-slate-600');
+    });
+    list.appendChild(defaultOption);
+
+    function makePresetBtn(preset) {
+      const btn = document.createElement('button');
+      btn.className = 'wizard-preset-option w-full text-left px-4 py-3 rounded-lg border-2 border-slate-600 hover:border-emerald-500 bg-slate-700 hover:bg-slate-600 transition-all flex items-center gap-3';
+
+      const swatchColor = preset.style?.leftPanelColor || '#0d1b2a';
+      const swatch = document.createElement('span');
+      swatch.className = 'w-6 h-6 rounded flex-shrink-0 border border-slate-400';
+      swatch.style.backgroundColor = swatchColor;
+      btn.appendChild(swatch);
+
+      const label = document.createElement('span');
+      label.className = 'text-sm font-medium text-slate-200 truncate';
+      label.textContent = preset.name;
+      btn.appendChild(label);
+
+      if (preset.builtIn) {
+        const tag = document.createElement('span');
+        tag.className = 'text-xs text-slate-500 ml-auto flex-shrink-0';
+        tag.textContent = 'built-in';
+        btn.appendChild(tag);
+      }
+
+      btn.addEventListener('click', () => {
+        wizardSelectedPreset = preset.style;
+        list.querySelectorAll('.wizard-preset-option').forEach(b => b.classList.remove('border-emerald-500', 'bg-slate-600'));
+        btn.classList.add('border-emerald-500', 'bg-slate-600');
+      });
+
+      // Restore active state if this preset was previously selected
+      if (currentPreset && currentPreset === preset.style) {
+        btn.classList.add('border-emerald-500', 'bg-slate-600');
+      }
+
+      return btn;
+    }
+
+    // Built-in presets (always shown)
+    BUILT_IN_PRESETS.forEach(preset => list.appendChild(makePresetBtn(preset)));
+
+    // User-saved presets
+    const userPresets = loadPresets();
+    if (userPresets.length > 0) {
+      const divider = document.createElement('p');
+      divider.className = 'text-xs text-slate-500 px-1 pt-2 pb-1 border-t border-slate-600 mt-1';
+      divider.textContent = 'Your saved presets';
+      list.appendChild(divider);
+      userPresets.forEach(preset => list.appendChild(makePresetBtn(preset)));
+    }
+
+    // Restore Default selection if nothing else was picked
+    if (currentPreset === null) {
+      defaultOption.classList.add('border-emerald-500', 'bg-slate-600');
+    }
+  }
+
+  function resetWizard() {
+    wizardStep = 1;
+    wizardMethod = null;
+    wizardSelectedPreset = null;
+    wizardImportData = null;
+    wizardMealType = '';
+    wizardDietary = { gf: false, sf: false, nf: false, wf: false };
+
+    titleInput.value = '';
+
+    // Clear image
+    wizardImageDataURL = '';
+    const imgPreview = document.getElementById('wizard-img-preview');
+    const imgPreviewWrap = document.getElementById('wizard-img-preview-wrap');
+    const imgIcon = document.getElementById('wizard-img-icon');
+    const imgLabelText = document.getElementById('wizard-img-label-text');
+    const imgActions = document.getElementById('wizard-img-actions');
+    const imgInput = document.getElementById('wizard-img-input');
+    if (imgPreview) imgPreview.src = '';
+    if (imgPreviewWrap) imgPreviewWrap.classList.add('hidden');
+    if (imgIcon) imgIcon.classList.remove('hidden');
+    if (imgLabelText) imgLabelText.textContent = 'Click to choose a recipe image';
+    if (imgActions) imgActions.classList.add('hidden');
+    if (imgInput) imgInput.value = '';
+
+    // Clear AI paste
+    const pasteInput = document.getElementById('wizard-paste-input');
+    if (pasteInput) pasteInput.value = '';
+    const pasteStatus = document.getElementById('wizard-paste-status');
+    if (pasteStatus) { pasteStatus.textContent = ''; pasteStatus.className = 'text-xs mt-2 text-slate-500'; }
+
+    // Clear import
+    const importName = document.getElementById('wizard-import-name');
+    if (importName) importName.textContent = '';
+    const importInput = document.getElementById('wizard-import-input');
+    if (importInput) importInput.value = '';
+
+    // Clear manual step fields
+    ['wizard-description', 'wizard-notes', 'wizard-serves', 'wizard-prep', 'wizard-cook', 'wizard-cal', 'wizard-pro', 'wizard-carb', 'wizard-fat'].forEach(id => {
+      const inp = document.getElementById(id);
+      if (inp) inp.value = '';
+    });
+    const ingList = document.getElementById('wizard-ingredients-list');
+    if (ingList) ingList.innerHTML = '';
+    const stepsList = document.getElementById('wizard-steps-list');
+    if (stepsList) stepsList.innerHTML = '';
+
+    nextBtn.classList.remove('hidden');
+    showStep(1);
+  }
+
+  window.openRecipeWizard = function() {
+    resetWizard();
+    modal.classList.remove('hidden');
+    setTimeout(() => titleInput.focus(), 50);
+  };
+
+  window.closeRecipeWizard = function() {
+    modal.classList.add('hidden');
+  };
+
+  function wizardFinish() {
+    const title = titleInput.value.trim();
+    newRecipeSilent();
+
+    // Apply image collected on the image step (all methods)
+    if (wizardImageDataURL) {
+      state.recipeImageURL = wizardImageDataURL;
+      state.showRecipeImage = true;
+      el('img-name').textContent = 'Image loaded';
+    }
+
+    if (wizardMethod === 'manual') {
+      // Apply all data collected across manual steps
+      const serves = document.getElementById('wizard-serves')?.value.trim() || '';
+      const prep   = document.getElementById('wizard-prep')?.value.trim()   || '';
+      const cook   = document.getElementById('wizard-cook')?.value.trim()   || '';
+      const cal    = document.getElementById('wizard-cal')?.value.trim()    || '';
+      const pro    = document.getElementById('wizard-pro')?.value.trim()    || '';
+      const carb   = document.getElementById('wizard-carb')?.value.trim()   || '';
+      const fat    = document.getElementById('wizard-fat')?.value.trim()    || '';
+      const ings   = getIngredients();
+      const dirs   = getDirections();
+
+      state.title    = title;
+      state.mealType = wizardMealType;
+      state.dietary  = { ...wizardDietary };
+      state.serves   = serves;
+      state.prep     = prep;
+      state.cook     = cook;
+      state.cal      = cal;
+      state.pro      = pro;
+      state.carb     = carb;
+      state.fat      = fat;
+      state.steps    = dirs;
+
+      // Build text sections from description and notes
+      const description = document.getElementById('wizard-description')?.value.trim() || '';
+      const notes       = document.getElementById('wizard-notes')?.value.trim()       || '';
+      state.textSections = [];
+      if (description) state.textSections.push({ title: 'Description', text: description });
+      if (notes)       state.textSections.push({ title: 'Notes',       text: notes });
+
+      // Build a single ingredient table if any ingredients were entered
+      if (ings.length > 0) {
+        state.tables = [{
+          name: 'Ingredients',
+          rows: [
+            ['Ingredient', 'Amount (US)', 'Amount (Metric)'],
+            ...ings.map(r => [r.name, r.us, r.metric])
+          ],
+          paste: ''
+        }];
+      }
+
+      el('title').value   = title;
+      el('serves').value  = serves;
+      el('prep').value    = prep;
+      el('cook').value    = cook;
+      el('cal').value     = cal;
+      el('pro').value     = pro;
+      el('carb').value    = carb;
+      el('fat').value     = fat;
+      document.querySelectorAll('input[name="meal"]').forEach(r => r.checked = (r.value === state.mealType));
+      el('gf').checked = !!state.dietary.gf;
+      el('sf').checked = !!state.dietary.sf;
+      el('nf').checked = !!state.dietary.nf;
+      el('wf').checked = !!state.dietary.wf;
+
+      renderTextSections();
+      renderTables();
+      renderSteps();
+      if (wizardSelectedPreset) {
+        applyStylePreset(wizardSelectedPreset);
+      } else {
+        refreshPreview();
+      }
+      closeRecipeWizard();
+      return;
+    }
+
+    if (wizardMethod === 'ai') {
+      const pasteText = document.getElementById('wizard-paste-input').value.trim();
+      if (!pasteText) {
+        const status = document.getElementById('wizard-paste-status');
+        if (status) { status.textContent = 'Please paste recipe text first.'; status.className = 'text-xs mt-2 text-red-400'; }
+        return;
+      }
+      try {
+        const parsed = parseMasterPaste(pasteText);
+        state.title = title || parsed.title;
+        state.mealType = parsed.meal_type;
+        state.dietary = parsed.dietary_indicators;
+        state.serves = parsed.serves;
+        state.prep = parsed.prep_time;
+        state.cook = parsed.cook_time;
+        state.cal = parsed.calories;
+        state.pro = parsed.protein;
+        state.carb = parsed.carbs;
+        state.fat = parsed.fat;
+        state.textSections = parsed.extra_text_sections;
+        state.tables = parsed.tables.map(t => ({ name: t.name, rows: t.data, paste: '' }));
+        state.steps = parsed.directions;
+
+        el('title').value = state.title;
+        el('serves').value = state.serves;
+        el('prep').value = state.prep;
+        el('cook').value = state.cook;
+        el('cal').value = state.cal;
+        el('pro').value = state.pro;
+        el('carb').value = state.carb;
+        el('fat').value = state.fat;
+        document.querySelectorAll('input[name="meal"]').forEach(r => r.checked = (r.value === state.mealType));
+        el('gf').checked = !!state.dietary.gf;
+        el('sf').checked = !!state.dietary.sf;
+        el('nf').checked = !!state.dietary.nf;
+        el('wf').checked = !!state.dietary.wf;
+
+        renderTextSections();
+        renderTables();
+        renderSteps();
+        refreshPreview();
+        closeRecipeWizard();
+      } catch (err) {
+        const status = document.getElementById('wizard-paste-status');
+        if (status) { status.textContent = 'Could not parse the pasted text. Please check the format.'; status.className = 'text-xs mt-2 text-red-400'; }
+      }
+      return;
+    }
+
+    if (wizardMethod === 'template') {
+      state.title = title;
+      el('title').value = title;
+      if (wizardSelectedPreset) {
+        applyStylePreset(wizardSelectedPreset);
+      } else {
+        refreshPreview();
+      }
+      closeRecipeWizard();
+      return;
+    }
+
+    if (wizardMethod === 'import') {
+      if (!wizardImportData) return;
+      const data = wizardImportData;
+      // Apply all fields from the imported .recipe JSON (mirrors open-file logic)
+      state.title = title; // wizard title overrides
+      state.titleColor = data.title_color || '#ffffff';
+      state.dietaryPosition = typeof data.dietary_position === 'number' ? data.dietary_position : 90;
+      state.serves = data.serves || '';
+      state.prep = data.prep_time || '';
+      state.cook = data.cook_time || '';
+      state.pro  = data.protein || '';
+      state.fat  = data.fat || '';
+      state.carb = data.carbs || '';
+      state.cal  = data.calories || '';
+      state.mealTypeBackgroundColor = data.meal_type_background_color || '#ffffff';
+      state.mealTypeTextColor = data.meal_type_text_color || '#0f172a';
+      state.mealType = data.meal_type || '';
+      state.dietary = data.dietary_indicators || { gf: false, sf: false, nf: false, wf: false };
+      state.textSections = data.extra_text_sections || [];
+      state.steps = data.directions || [];
+      state.tables = (data.tables || []).map(t => ({ name: t.name, rows: t.data || [[]] }));
+      state.recipeImageURL = data.recipe_image_path || '';
+      state.logoURL = data.logo_url || '';
+      state.logoSize = typeof data.logo_size === 'number' ? data.logo_size : 200;
+      state.tpl1URL = data.template_path || '';
+      state.tpl2URL = data.template_path_2 || '';
+      state.leftPanelColor = data.left_panel_color || '#0d1b2a';
+      state.leftPanelFontColor = data.left_panel_font_color || '#ffffff';
+      state.leftPanelBorderEnabled = !!data.left_panel_border_enabled;
+      state.leftPanelBorderColor = data.left_panel_border_color || '#ffffff';
+      state.leftPanelBorderWidth = typeof data.left_panel_border_width === 'number' ? data.left_panel_border_width : 2;
+      state.leftPanelBorderRadius = typeof data.left_panel_border_radius === 'number' ? data.left_panel_border_radius : 6;
+      state.leftPanelScale = typeof data.left_panel_scale === 'number' ? data.left_panel_scale : 100;
+      state.leftPanelX = typeof data.left_panel_x === 'number' ? data.left_panel_x : 0;
+      state.leftPanelY = typeof data.left_panel_y === 'number' ? data.left_panel_y : 0;
+      state.rightPanelScale = typeof data.right_panel_scale === 'number' ? data.right_panel_scale : 100;
+      state.rightPanelX = typeof data.right_panel_x === 'number' ? data.right_panel_x : 0;
+      state.rightPanelY = typeof data.right_panel_y === 'number' ? data.right_panel_y : 0;
+      state.panelsLinked = data.panels_linked !== false;
+      state.showTitle = data.show_title !== false;
+      state.showRecipeImage = data.show_recipe_image !== false;
+      state.showLogo = !!data.show_logo;
+      state.showMealType = data.show_meal_type !== false;
+      state.showDietary = data.show_dietary !== false;
+      state.showInfoSection = data.show_info_section !== false;
+      state.infoLayoutVertical = !!data.info_layout_vertical;
+      state.showMacros = data.show_macros !== false;
+      state.showMacrosTitle = !!data.show_macros_title;
+      state.macrosTitleText = data.macros_title_text || 'Individual Serving';
+      state.macrosLayoutVertical = !!data.macros_layout_vertical;
+      state.showIngredients = data.show_ingredients !== false;
+      state.showDirections = data.show_directions !== false;
+      state.showTextSections = data.show_text_sections !== false;
+      state.leftPanelOpacity = typeof data.left_panel_opacity === 'number' ? data.left_panel_opacity : 1;
+      state.showTableBorders = data.show_table_borders !== false;
+      state.stepsManualEnabled = !!data.steps_manual_enabled;
+      state.stepsOffset = typeof data.steps_offset === 'number' ? data.steps_offset : 0;
+      state.allDirectionsOnPage2 = !!data.all_directions_on_page2;
+
+      // Sync UI controls
+      if (leftBgColor) leftBgColor.value = state.leftPanelColor;
+      if (leftFontColor) leftFontColor.value = state.leftPanelFontColor;
+      if (leftBorderColor) leftBorderColor.value = state.leftPanelBorderColor;
+      if (borderEnabled) borderEnabled.checked = state.leftPanelBorderEnabled;
+      if (el('title-color')) el('title-color').value = state.titleColor;
+      setBorderWidth(state.leftPanelBorderWidth);
+      setBorderRadius(state.leftPanelBorderRadius);
+      setPanelScale(state.leftPanelScale);
+      setPanelX(state.leftPanelX);
+      setPanelY(state.leftPanelY);
+      setRightPanelScale(state.rightPanelScale);
+      setRightPanelX(state.rightPanelX);
+      setRightPanelY(state.rightPanelY);
+      if (linkPanels) linkPanels.checked = state.panelsLinked;
+      if (opacitySlider && opacityManual && opacityValue) {
+        opacitySlider.value = state.leftPanelOpacity;
+        opacityManual.value = state.leftPanelOpacity;
+        opacityValue.textContent = `${Math.round(state.leftPanelOpacity * 100)}%`;
+      }
+      Object.entries(visibilityToggles).forEach(([id, stateKey]) => {
+        const toggle = el(id);
+        if (toggle) toggle.checked = state[stateKey];
+      });
+
+      el('title').value = state.title;
+      el('serves').value = state.serves;
+      el('prep').value = state.prep;
+      el('cook').value = state.cook;
+      el('cal').value = state.cal;
+      el('pro').value = state.pro;
+      el('carb').value = state.carb;
+      el('fat').value = state.fat;
+      document.querySelectorAll('input[name="meal"]').forEach(r => r.checked = (r.value === state.mealType));
+      el('gf').checked = !!state.dietary.gf;
+      el('sf').checked = !!state.dietary.sf;
+      el('nf').checked = !!state.dietary.nf;
+      el('wf').checked = !!state.dietary.wf;
+      el('img-name').textContent = state.recipeImageURL ? 'Image loaded' : 'No image';
+      el('logo-name').textContent = state.logoURL ? 'Logo loaded' : 'No logo';
+      el('tpl1-name').textContent = state.tpl1URL ? 'Template 1 loaded' : 'No template';
+
+      renderTextSections();
+      renderTables();
+      renderSteps();
+      refreshPreview();
+      closeRecipeWizard();
+      return;
+    }
+  }
+
+  // Method tile clicks
+  document.querySelectorAll('.wizard-method-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      wizardMethod = tile.dataset.method;
+      const stepMap = { ai: '3a', template: '3b', import: '3c', manual: 'm0' };
+      showStep(stepMap[wizardMethod]);
+    });
+  });
+
+  // Meal type pill clicks
+  document.querySelectorAll('.wizard-meal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wizardMealType = wizardMealType === btn.dataset.meal ? '' : btn.dataset.meal;
+      syncMealTypeButtons();
+    });
+  });
+
+  // Dietary pill clicks
+  document.querySelectorAll('.wizard-dietary-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.dietary;
+      wizardDietary[key] = !wizardDietary[key];
+      syncDietaryButtons();
+    });
+  });
+
+  // Add ingredient row button
+  document.getElementById('wizard-add-ingredient')?.addEventListener('click', () => addIngredientRow());
+
+  // Add step row button
+  document.getElementById('wizard-add-step')?.addEventListener('click', () => addStepRow());
+
+  // Paste input validation
+  document.getElementById('wizard-paste-input')?.addEventListener('input', () => {
+    if (wizardStep === '3a') {
+      nextBtn.disabled = document.getElementById('wizard-paste-input').value.trim() === '';
+    }
+  });
+
+  // Image picker
+  let wizardImageDataURL = '';
+
+  document.getElementById('wizard-img-input')?.addEventListener('change', async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    wizardImageDataURL = await readFileToDataURL(f);
+    const preview = document.getElementById('wizard-img-preview');
+    const previewWrap = document.getElementById('wizard-img-preview-wrap');
+    const icon = document.getElementById('wizard-img-icon');
+    const labelText = document.getElementById('wizard-img-label-text');
+    const actions = document.getElementById('wizard-img-actions');
+    const nameEl = document.getElementById('wizard-img-name');
+    if (preview) { preview.src = wizardImageDataURL; }
+    if (previewWrap) previewWrap.classList.remove('hidden');
+    if (icon) icon.classList.add('hidden');
+    if (labelText) labelText.textContent = 'Click to change image';
+    if (actions) actions.classList.remove('hidden');
+    if (nameEl) nameEl.textContent = f.name;
+  });
+
+  document.getElementById('wizard-img-clear')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    wizardImageDataURL = '';
+    const preview = document.getElementById('wizard-img-preview');
+    const previewWrap = document.getElementById('wizard-img-preview-wrap');
+    const icon = document.getElementById('wizard-img-icon');
+    const labelText = document.getElementById('wizard-img-label-text');
+    const actions = document.getElementById('wizard-img-actions');
+    const input = document.getElementById('wizard-img-input');
+    if (preview) preview.src = '';
+    if (previewWrap) previewWrap.classList.add('hidden');
+    if (icon) icon.classList.remove('hidden');
+    if (labelText) labelText.textContent = 'Click to choose a recipe image';
+    if (actions) actions.classList.add('hidden');
+    if (input) input.value = '';
+  });
+
+  // Import file picker
+  document.getElementById('wizard-import-input')?.addEventListener('change', async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try {
+      const text = await f.text();
+      wizardImportData = JSON.parse(text);
+      const importName = document.getElementById('wizard-import-name');
+      if (importName) importName.textContent = f.name;
+      nextBtn.disabled = false;
+    } catch {
+      wizardImportData = null;
+      const importName = document.getElementById('wizard-import-name');
+      if (importName) importName.textContent = 'Error reading file — is it a valid .recipe file?';
+      nextBtn.disabled = true;
+    }
+  });
+
+  // Title input — enable Next when non-empty, Enter to advance
+  titleInput?.addEventListener('input', () => {
+    if (wizardStep === 1) nextBtn.disabled = titleInput.value.trim() === '';
+  });
+  titleInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !nextBtn.disabled && wizardStep === 1) {
+      e.preventDefault();
+      showStep('img');
+    }
+  });
+
+  // Next button
+  nextBtn?.addEventListener('click', () => {
+    if (wizardStep === 1) {
+      showStep('img');
+    } else if (wizardStep === 'img') {
+      showStep(2);
+    } else if (wizardStep === 'm0') {
+      showStep('m1');
+    } else if (wizardStep === 'm1') {
+      showStep('m1b');
+    } else if (wizardStep === 'm1b') {
+      showStep('m2');
+    } else if (wizardStep === 'm2') {
+      showStep('m3');
+    } else if (wizardStep === 'm3') {
+      showStep('m4');
+    } else if (wizardStep === 'm4') {
+      showStep('m5');
+    } else if (wizardStep === 'm5' || wizardStep === '3a' || wizardStep === '3b' || wizardStep === '3c') {
+      wizardFinish();
+    }
+  });
+
+  // Back button
+  backBtn?.addEventListener('click', () => {
+    if (wizardStep === 2) {
+      showStep('img');
+    } else if (wizardStep === 'img') {
+      showStep(1);
+    } else if (wizardStep === 'm0') {
+      wizardMethod = null;
+      wizardSelectedPreset = null;
+      showStep(2);
+    } else if (wizardStep === 'm1') {
+      showStep('m0');
+    } else if (wizardStep === 'm1b') {
+      showStep('m1');
+    } else if (wizardStep === 'm2') {
+      showStep('m1b');
+    } else if (wizardStep === 'm3') {
+      showStep('m2');
+    } else if (wizardStep === 'm4') {
+      showStep('m3');
+    } else if (wizardStep === 'm5') {
+      showStep('m4');
+    } else if (wizardStep === '3a' || wizardStep === '3b' || wizardStep === '3c') {
+      wizardMethod = null;
+      wizardSelectedPreset = null;
+      wizardImportData = null;
+      showStep(2);
+    }
+  });
+
+  // Copy Prompt button
+  const copyPromptInstructions = `Task: Convert the attached recipe into my Master Paste format.
+
+Produce the Master Paste text with these sections, exactly as shown:
+
+::META::
+title;mealtype;dietary;serves;preptime;cooktime;calories;protein;carbs;fat
+
+::TEXT::  (optional, repeatable for multiple text blocks)
+<Label line>
+<Paragraph text>
+
+::INGREDIENTS::
+Either a single default table with 3 semicolon columns:
+Ingredient;Amount (US);Amount (Metric)
+<Row 1>
+<Row 2>
+…
+OR multiple named tables, each started by:
+::TABLE <name>::
+Ingredient;Amount (US);Amount (Metric)
+<Row 1>
+<Row 2>
+
+::DIRECTIONS::
+One step per line (no numbering)
+
+RULES:
+- mealtype must be one of: Breakfast, Lunch/Dinner, Snack, Dessert, Sauce
+- dietary is a comma list from: gf, sf, nf, wf (leave empty if none apply)
+- Keep ingredient names verbatim from the recipe
+- Keep amounts in both US and Metric with units
+- Times are numbers in minutes only (no units)
+- Macros are numbers only (no units)
+- Do not number the directions
+- If the recipe has multiple ingredient sections (like "Bowl" and "Sauce"), use ::TABLE <name>:: for each
+
+EXAMPLE OUTPUT:
+
+::META::
+Ultimate Tofu Bowl;Lunch/Dinner;gf,wf;4;10;20;520;38;62;14
+
+::TEXT::
+Notes
+Use extra-firm tofu and press well.
+
+::INGREDIENTS::
+::TABLE Bowl::
+Ingredient;Amount (US);Amount (Metric)
+Firm Tofu, cooked;28 oz;794 g
+Brown Rice, cooked;3 cups;600 g
+Baby Spinach;6 cups;180 g
+
+::TABLE Sauce::
+Ingredient;Amount (US);Amount (Metric)
+Soy Sauce, low sodium;3 tbsp;45 ml
+Maple Syrup;1 tbsp;15 ml
+Rice Vinegar;1 tbsp;15 ml
+
+::DIRECTIONS::
+Press and cube tofu.
+Sear tofu until golden.
+Whisk sauce and add to pan.
+Toss with rice and spinach. Serve hot.`;
+
+  document.getElementById('wizard-copy-prompt-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('wizard-copy-prompt-btn');
+    const statusEl = document.getElementById('wizard-paste-status');
+    try {
+      await navigator.clipboard.writeText(copyPromptInstructions);
+      const original = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      if (statusEl) { statusEl.textContent = 'Prompt copied — paste it with your recipe screenshot in ChatGPT'; statusEl.className = 'text-xs mt-2 text-blue-400'; }
+      setTimeout(() => {
+        btn.textContent = original;
+        if (statusEl) { statusEl.textContent = ''; statusEl.className = 'text-xs mt-2 text-slate-500'; }
+      }, 3000);
+    } catch {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = copyPromptInstructions;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      const original = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = original; }, 3000);
+    }
+  });
+
+  // Open in ChatGPT button — copies prompt AND opens ChatGPT with it pre-filled
+  document.getElementById('wizard-open-chatgpt-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('wizard-open-chatgpt-btn');
+    const statusEl = document.getElementById('wizard-paste-status');
+
+    // Copy to clipboard so user can also paste their image
+    try { await navigator.clipboard.writeText(copyPromptInstructions); } catch { /* best-effort */ }
+
+    // Open ChatGPT with the prompt pre-filled via ?q= parameter
+    const chatGPTUrl = 'https://chatgpt.com/?q=' + encodeURIComponent(copyPromptInstructions);
+    window.open(chatGPTUrl, '_blank', 'noopener');
+
+    const original = btn.textContent;
+    btn.textContent = '✓ Opening…';
+    if (statusEl) {
+      statusEl.textContent = 'ChatGPT opened with the prompt pre-filled — attach your recipe image and send';
+      statusEl.className = 'text-xs mt-2 text-sky-400';
+    }
+    setTimeout(() => {
+      btn.textContent = original;
+      if (statusEl) { statusEl.textContent = ''; statusEl.className = 'text-xs mt-2 text-slate-500'; }
+    }, 4000);
+  });
+
+  // Close / Cancel / Esc
+  function confirmAndClose() {
+    if (wizardStep === 1) { closeRecipeWizard(); return; }
+    if (confirm('Discard this recipe and close the wizard?')) closeRecipeWizard();
+  }
+
+  closeBtn?.addEventListener('click', confirmAndClose);
+  cancelBtn?.addEventListener('click', confirmAndClose);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      confirmAndClose();
+    }
+  });
+})();
 
 // Preferences modal event handlers
 document.getElementById('close-preferences')?.addEventListener('click', closePreferences);
@@ -3010,6 +4044,9 @@ document.querySelectorAll('.menu-action').forEach(btn => {
     const action = btn.dataset.action;
 
     switch (action) {
+      case 'wizard':
+        openRecipeWizard();
+        break;
       case 'new':
         newRecipe();
         break;
@@ -3047,6 +4084,15 @@ document.querySelectorAll('.menu-action').forEach(btn => {
       case 'toggle-dev-features':
         toggleDevFeatures();
         break;
+      case 'toggle-section':
+        toggleSection(e.target.closest('[data-section]')?.dataset.section);
+        break;
+      case 'expand-all-sections':
+        setAllAccordions(true);
+        break;
+      case 'collapse-all-sections':
+        setAllAccordions(false);
+        break;
       case 'preferences':
         openPreferences();
         break;
@@ -3066,7 +4112,7 @@ document.addEventListener('keydown', (e) => {
     switch (e.key.toLowerCase()) {
       case 'n':
         e.preventDefault();
-        newRecipe();
+        openRecipeWizard();
         break;
       case 'o':
         e.preventDefault();
@@ -3166,6 +4212,8 @@ RULES:
 - Macros are numbers only (no units)
 - Do not number the directions
 - If the recipe has multiple ingredient sections (like "Bowl" and "Sauce"), use ::TABLE <name>:: for each
+- CRITICAL: Every ingredient table MUST start with the header row exactly as: Ingredient;Amount (US);Amount (Metric)
+- Include ALL ingredients from the recipe - do not skip any
 
 EXAMPLE OUTPUT:
 

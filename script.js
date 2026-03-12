@@ -210,6 +210,7 @@ function renderPaginatedSteps() {
 // App State & Utils
 // ==================
 const state = {
+layout: 'classic',  // 'classic' or 'magazine'
 stepsManualEnabled: false,
 stepsOffset: 0,
 allDirectionsOnPage2: false,
@@ -1251,6 +1252,26 @@ if (btnReset) {
 // Preview Rendering
 // ==================
 function refreshPreview() {
+  if (state.layout === 'magazine') {
+    refreshPreviewMagazine();
+  } else {
+    refreshPreviewClassic();
+  }
+
+  // Add layout class to pages
+  const page1 = document.getElementById('page1');
+  const page2 = document.getElementById('page2');
+  if (page1) {
+    page1.classList.remove('layout-classic', 'layout-magazine');
+    page1.classList.add('layout-' + state.layout);
+  }
+  if (page2) {
+    page2.classList.remove('layout-classic', 'layout-magazine');
+    page2.classList.add('layout-' + state.layout);
+  }
+}
+
+function refreshPreviewClassic() {
   // Section spacing will be applied to macros-title if visible, otherwise macros-grid
   // This is handled later in the macros visibility section
 
@@ -1635,6 +1656,28 @@ el('pro')?.addEventListener('input',    e => { state.pro    = e.target.value; re
 el('carb')?.addEventListener('input',   e => { state.carb   = e.target.value; refreshPreview(); });
 el('fat')?.addEventListener('input',    e => { state.fat    = e.target.value; refreshPreview(); });
 
+
+function refreshPreviewMagazine() {
+  // Stub implementation - placeholder for Phase 2
+  const page1 = document.getElementById('page1');
+  const content = page1.querySelector('.content');
+
+  if (content) {
+    content.innerHTML = `
+      <div class="h-full flex items-center justify-center bg-slate-50">
+        <div class="text-center">
+          <h2 class="text-2xl font-bold mb-2 text-slate-800">Magazine Layout</h2>
+          <p class="text-slate-600">Coming soon in Phase 2...</p>
+          <p class="text-sm text-slate-500 mt-2">Switch back to Classic to use the current layout</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Hide page 2 for now
+  const page2 = document.getElementById('page2');
+  if (page2) page2.classList.add('hidden');
+}
 
 // ==================
 // Text Sections UI
@@ -4093,6 +4136,16 @@ document.querySelectorAll('.menu-action').forEach(btn => {
       case 'collapse-all-sections':
         setAllAccordions(false);
         break;
+      case 'layout-classic':
+        state.layout = 'classic';
+        updateLayoutCheckmarks();
+        refreshPreview();
+        break;
+      case 'layout-magazine':
+        state.layout = 'magazine';
+        updateLayoutCheckmarks();
+        refreshPreview();
+        break;
       case 'preferences':
         openPreferences();
         break;
@@ -4102,6 +4155,15 @@ document.querySelectorAll('.menu-action').forEach(btn => {
     document.querySelectorAll('.menu-dropdown').forEach(m => m.classList.remove('open'));
   });
 });
+
+// Update layout checkmarks based on current state
+function updateLayoutCheckmarks() {
+  const classicCheck = document.getElementById('layout-classic-check');
+  const magazineCheck = document.getElementById('layout-magazine-check');
+
+  if (classicCheck) classicCheck.style.display = state.layout === 'classic' ? '' : 'none';
+  if (magazineCheck) magazineCheck.style.display = state.layout === 'magazine' ? '' : 'none';
+}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {

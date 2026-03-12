@@ -528,3 +528,22 @@
   align-items: center;
   flex: 1;
 }
+
+/* ==================== */
+/* Layout Modifiers     */
+/* ==================== */
+
+.page.layout-classic {
+  /* Classic layout uses existing styles - no overrides needed */
+}
+
+.page.layout-magazine {
+  /* Magazine layout styles - Phase 2 implementation */
+}
+
+/* Hide classic-specific elements in magazine layout */
+.page.layout-magazine .left-panel,
+.page.layout-magazine .col-span-5,
+.page.layout-magazine .col-span-7 {
+  display: none !important;
+}

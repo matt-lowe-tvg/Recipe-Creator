@@ -538,7 +538,7 @@
 }
 
 .page.layout-magazine {
-  /* Magazine layout styles - Phase 2 implementation */
+  /* Magazine layout uses custom structure */
 }
 
 /* Hide classic-specific elements in magazine layout */
@@ -546,4 +546,204 @@
 .page.layout-magazine .col-span-5,
 .page.layout-magazine .col-span-7 {
   display: none !important;
+}
+
+/* Magazine Layout Styles */
+.magazine-layout {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+/* Hero Section */
+.magazine-hero {
+  position: relative;
+  width: 100%;
+  height: 50%;
+  min-height: 396px;
+  overflow: hidden;
+}
+
+.magazine-hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30px 40px;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, transparent 100%);
+}
+
+.magazine-title {
+  font-size: 42px;
+  font-weight: 800;
+  color: white;
+  text-transform: uppercase;
+  line-height: 1.1;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.magazine-logo {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 80px;
+  height: auto;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+}
+
+/* Macro Banner */
+.magazine-macro-banner {
+  background: #76b82a;
+  color: white;
+  padding: 12px 40px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+  letter-spacing: 0.5px;
+}
+
+/* Description */
+.magazine-description {
+  padding: 20px 40px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1a1a1a;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+/* Section Styling */
+.magazine-section {
+  padding: 0 40px;
+  margin-top: 20px;
+}
+
+.magazine-section-title {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 15px 0;
+  color: #1a1a1a;
+}
+
+/* Materials Icons */
+.magazine-materials {
+  display: flex;
+  gap: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.material-icon {
+  font-size: 32px;
+  filter: grayscale(1) opacity(0.6);
+}
+
+/* Main Grid (Ingredients + Instructions) */
+.magazine-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  padding: 0 40px 40px 40px;
+  margin-top: 20px;
+  flex: 1;
+}
+
+.magazine-left-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.magazine-right-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ingredients Table */
+.magazine-ingredients-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.magazine-ingredients-table {
+  width: 100%;
+  font-size: 12px;
+}
+
+.magazine-ingredients-table tr {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.magazine-ingredients-table td {
+  padding: 8px 0;
+  vertical-align: top;
+}
+
+.magazine-ingredient-name {
+  font-weight: 400;
+  color: #1a1a1a;
+  width: 60%;
+}
+
+.magazine-ingredient-amount {
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: right;
+  width: 40%;
+}
+
+/* Instructions Box */
+.magazine-instructions {
+  background: #2d2d2d;
+  color: white;
+  padding: 20px;
+  border-radius: 4px;
+  height: fit-content;
+}
+
+.magazine-instructions-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 15px 0;
+  color: white;
+  text-align: center;
+}
+
+.magazine-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.magazine-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.magazine-step-number {
+  background: #4a4a4a;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.magazine-step-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e5e5e5;
+  flex: 1;
 }

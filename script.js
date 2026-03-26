@@ -210,7 +210,7 @@ function renderPaginatedSteps() {
 // App State & Utils
 // ==================
 const state = {
-layout: 'classic',  // 'classic' or 'magazine'
+layout: 'classic',
 stepsManualEnabled: false,
 stepsOffset: 0,
 allDirectionsOnPage2: false,
@@ -1262,22 +1262,18 @@ if (btnReset) {
 // Preview Rendering
 // ==================
 function refreshPreview() {
-  if (state.layout === 'magazine') {
-    refreshPreviewMagazine();
-  } else {
-    refreshPreviewClassic();
-  }
+  refreshPreviewClassic();
 
   // Add layout class to pages
   const page1 = document.getElementById('page1');
   const page2 = document.getElementById('page2');
   if (page1) {
     page1.classList.remove('layout-classic', 'layout-magazine');
-    page1.classList.add('layout-' + state.layout);
+    page1.classList.add('layout-classic');
   }
   if (page2) {
     page2.classList.remove('layout-classic', 'layout-magazine');
-    page2.classList.add('layout-' + state.layout);
+    page2.classList.add('layout-classic');
   }
 }
 
@@ -1667,148 +1663,6 @@ el('carb')?.addEventListener('input',   e => { state.carb   = e.target.value; re
 el('fat')?.addEventListener('input',    e => { state.fat    = e.target.value; refreshPreview(); });
 
 
-function refreshPreviewMagazine() {
-  const page1 = document.getElementById('page1');
-  const content = page1.querySelector('.content');
-  const page2 = document.getElementById('page2');
-
-  if (!content) return;
-
-  // Get recipe image URL or use placeholder
-  const heroImage = state.recipeImageURL || '';
-  const hasImage = heroImage.length > 0;
-  const heroStyle = hasImage
-    ? `background-image: url('${heroImage}'); background-size: cover; background-position: center;`
-    : `background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);`;
-
-  // Build description from text sections
-  const description = state.textSections.length > 0
-    ? state.textSections[0].text
-    : 'A delicious and nutritious recipe';
-
-  // Build macro banner
-  const macroHTML = state.showMacros ? `
-    <div class="magazine-macro-banner">
-      ${state.cal ? `${state.cal} CALORIES` : ''}${state.pro ? ` | ${state.pro} G OF PROTEIN` : ''}${state.carb ? ` | ${state.carb} G OF CARBS` : ''}${state.fat ? ` | ${state.fat} G OF FAT` : ''}
-    </div>
-  ` : '';
-
-  // Build materials icons (placeholder for now)
-  const materialsHTML = `
-    <div class="magazine-materials">
-      <div class="material-icon">🍳</div>
-      <div class="material-icon">🔪</div>
-      <div class="material-icon">🥄</div>
-      <div class="material-icon">🥣</div>
-      <div class="material-icon">🍴</div>
-    </div>
-  `;
-
-  // Build ingredients section
-  let ingredientsHTML = '';
-  if (state.tables.length > 0 && state.showIngredients) {
-    const ingredientRows = [];
-    state.tables.forEach(table => {
-      table.rows.forEach(row => {
-        const ingredient = row[0] || '';
-        const amountUS = row[1] || '';
-        const amountMetric = row[2] || '';
-        if (ingredient) {
-          ingredientRows.push(`
-            <tr>
-              <td class="magazine-ingredient-name">${ingredient}</td>
-              <td class="magazine-ingredient-amount">${amountUS || amountMetric}</td>
-            </tr>
-          `);
-        }
-      });
-    });
-
-    // Split ingredients into two columns
-    const midPoint = Math.ceil(ingredientRows.length / 2);
-    const leftColumn = ingredientRows.slice(0, midPoint).join('');
-    const rightColumn = ingredientRows.slice(midPoint).join('');
-
-    ingredientsHTML = `
-      <div class="magazine-section">
-        <h2 class="magazine-section-title">INGREDIENTS FOR ${state.serves || '4'} SERVINGS</h2>
-        <div class="magazine-ingredients-grid">
-          <table class="magazine-ingredients-table">
-            ${leftColumn}
-          </table>
-          <table class="magazine-ingredients-table">
-            ${rightColumn}
-          </table>
-        </div>
-      </div>
-    `;
-  }
-
-  // Build instructions section
-  let instructionsHTML = '';
-  if (state.steps.length > 0 && state.showDirections) {
-    const stepsHTML = state.steps.map((step, idx) => `
-      <div class="magazine-step">
-        <div class="magazine-step-number">${idx + 1}</div>
-        <div class="magazine-step-text">${step}</div>
-      </div>
-    `).join('');
-
-    instructionsHTML = `
-      <div class="magazine-instructions">
-        <h2 class="magazine-instructions-title">INSTRUCTIONS FOR ${state.serves || '4'} SERVINGS</h2>
-        <div class="magazine-steps">
-          ${stepsHTML}
-        </div>
-      </div>
-    `;
-  }
-
-  // Build Page 1 HTML
-  content.innerHTML = `
-    <div class="magazine-layout">
-      <!-- Hero Section -->
-      <div class="magazine-hero" style="${heroStyle}">
-        <div class="magazine-hero-overlay">
-          <h1 class="magazine-title">${state.title || 'RECIPE TITLE'}</h1>
-        </div>
-        ${state.showLogo && state.logoURL ? `
-          <img src="${state.logoURL}" class="magazine-logo" alt="Logo" />
-        ` : ''}
-      </div>
-
-      <!-- Macro Banner -->
-      ${macroHTML}
-
-      <!-- Description -->
-      <div class="magazine-description">
-        ${description}
-      </div>
-
-      <!-- Materials -->
-      <div class="magazine-section">
-        <h2 class="magazine-section-title">MATERIALS</h2>
-        ${materialsHTML}
-      </div>
-
-      <!-- Ingredients and Instructions Grid -->
-      <div class="magazine-main-grid">
-        <div class="magazine-left-content">
-          ${ingredientsHTML}
-        </div>
-        <div class="magazine-right-content">
-          ${instructionsHTML}
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Handle Page 2 (for overflow instructions or ingredients)
-  if (page2) {
-    // For now, hide page 2 - will implement pagination later if needed
-    page2.classList.add('hidden');
-  }
-}
 
 // ==================
 // Text Sections UI
@@ -4267,16 +4121,6 @@ document.querySelectorAll('.menu-action').forEach(btn => {
       case 'collapse-all-sections':
         setAllAccordions(false);
         break;
-      case 'layout-classic':
-        state.layout = 'classic';
-        updateLayoutCheckmarks();
-        refreshPreview();
-        break;
-      case 'layout-magazine':
-        state.layout = 'magazine';
-        updateLayoutCheckmarks();
-        refreshPreview();
-        break;
       case 'preferences':
         openPreferences();
         break;
@@ -4287,14 +4131,6 @@ document.querySelectorAll('.menu-action').forEach(btn => {
   });
 });
 
-// Update layout checkmarks based on current state
-function updateLayoutCheckmarks() {
-  const classicCheck = document.getElementById('layout-classic-check');
-  const magazineCheck = document.getElementById('layout-magazine-check');
-
-  if (classicCheck) classicCheck.style.display = state.layout === 'classic' ? '' : 'none';
-  if (magazineCheck) magazineCheck.style.display = state.layout === 'magazine' ? '' : 'none';
-}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {

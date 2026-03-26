@@ -300,13 +300,23 @@ function parseMasterPaste(text) {
   for (let line of lines) {
     const sectionMatch = line.match(/^::\s*([A-Z]+)(?:\s+([^:]+))?\s*::$/i);
     if (sectionMatch) {
-      // Save previous section
-      if (currentSection) {
-        if (!sections[currentSection]) sections[currentSection] = [];
-        sections[currentSection].push({ name: null, lines: currentContent });
+      const sectionName = sectionMatch[1].toUpperCase();
+      // Only treat META, TEXT, INGREDIENTS, DIRECTIONS as top-level sections
+      // TABLE should be treated as content within INGREDIENTS
+      if (['META', 'TEXT', 'INGREDIENTS', 'DIRECTIONS'].includes(sectionName)) {
+        // Save previous section
+        if (currentSection) {
+          if (!sections[currentSection]) sections[currentSection] = [];
+          sections[currentSection].push({ name: null, lines: currentContent });
+        }
+        currentSection = sectionName;
+        currentContent = [];
+      } else {
+        // Not a main section, treat as content line
+        if (currentSection) {
+          currentContent.push(line);
+        }
       }
-      currentSection = sectionMatch[1].toUpperCase();
-      currentContent = [];
     } else if (currentSection) {
       currentContent.push(line);
     }
